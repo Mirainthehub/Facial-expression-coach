@@ -2,7 +2,7 @@
 
 > AI驱动的专业表演训练系统，基于MediaPipe面部识别技术，提供影视镜头与舞台表演两种模式的表情训练。
 
-[![Demo](https://img.shields.io/badge/🚀-Live%20Demo-blue)](https://your-username.github.io/Facial-expression-coach/)
+[![Demo](https://img.shields.io/badge/🚀-Live%20Demo-blue)](https://mirainthehub.github.io/Facial-expression-coach/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Privacy](https://img.shields.io/badge/🔒-本地计算-brightgreen)](README.md#隐私保护)
 
@@ -31,12 +31,12 @@
 ## 🚀 快速开始
 
 ### 在线体验
-访问 [Live Demo](https://your-username.github.io/Facial-expression-coach/) 立即开始训练
+访问 [Live Demo](https://mirainthehub.github.io/Facial-expression-coach/) 立即开始训练
 
 ### 本地运行
 1. 克隆项目
 ```bash
-git clone https://github.com/your-username/Facial-expression-coach.git
+git clone https://github.com/Mirainthehub/Facial-expression-coach.git
 cd Facial-expression-coach
 ```
 
@@ -65,7 +65,7 @@ npx serve .
 - 确保光线充足，面部清晰可见
 - 保持正面朝向，头部占据画面约1/3
 
-###第三步：个人化校准
+### 第三步：个人化校准
 - 保持中性表情2秒钟
 - 系统建立你的个人面部基线
 - 提高后续评分的准确性
@@ -190,9 +190,9 @@ const finalScore = {
 
 ## 📞 联系我们
 
-- 🐛 **Bug报告**: [GitHub Issues](https://github.com/your-username/Facial-expression-coach/issues)
-- 💡 **功能建议**: [GitHub Discussions](https://github.com/your-username/Facial-expression-coach/discussions)
-- 📧 **商务合作**: your-email@example.com
+- 🐛 **Bug报告**: [GitHub Issues](https://github.com/Mirainthehub/Facial-expression-coach/issues)
+- 💡 **功能建议**: [GitHub Discussions](https://github.com/Mirainthehub/Facial-expression-coach/discussions)
+- 📧 **商务合作**: 120312454+Mirainthehub@users.noreply.github.com
 
 ## 🗺️ 发展路线图
 
@@ -220,6 +220,6 @@ const finalScore = {
 
 **⭐ 如果这个项目对你有帮助，请给个Star支持一下！**
 
-Made with ❤️ by [Your Name](https://github.com/your-username)
+Made with ❤️ by [Miranda Zhang](https://github.com/Mirainthehub)
 
 </div>
