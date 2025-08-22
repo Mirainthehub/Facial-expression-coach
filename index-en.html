@@ -228,10 +228,10 @@
             object-fit: cover;
         }
         
-        .mirror-mode #videoElement,
-        .mirror-mode #beautifiedCanvas,
-        .mirror-mode #beautifiedCanvas2,
-        .mirror-mode #beautifiedCanvas3 {
+        #videoElement,
+        #beautifiedCanvas,
+        #beautifiedCanvas2,
+        #beautifiedCanvas3 {
             transform: scaleX(-1);
         }
         
@@ -822,12 +822,6 @@
                                     <div class="toggle-slider"></div>
                                 </div>
                             </div>
-                            <div class="beauty-toggle">
-                                <span class="beauty-label">Mirror</span>
-                                <div class="toggle-switch active" id="mirrorToggle">
-                                    <div class="toggle-slider"></div>
-                                </div>
-                            </div>
                             <div class="beauty-control-group">
                                 <div class="beauty-slider-container">
                                     <span class="beauty-slider-label">Smooth</span>
@@ -1094,7 +1088,6 @@
         let trainingSequence = ['smile_natural', 'smile_duchenne', 'surprised', 'sad', 'angry'];
         let countdownTimer = null;
         let trainingTimer = null;
-        let isMirrorMode = true; // Default mirror mode enabled
         
         // Beauty filter settings
         let beautySettings = {
@@ -1998,19 +1991,6 @@
                 });
             }
             
-            const mirrorToggle = document.getElementById('mirrorToggle');
-            if (mirrorToggle) {
-                mirrorToggle.addEventListener('click', () => {
-                    isMirrorMode = !isMirrorMode;
-                    mirrorToggle.classList.toggle('active', isMirrorMode);
-                    
-                    // Update all video wrappers mirror mode
-                    const videoWrappers = document.querySelectorAll('.video-wrapper');
-                    videoWrappers.forEach(wrapper => {
-                        wrapper.classList.toggle('mirror-mode', isMirrorMode);
-                    });
-                });
-            }
             
             if (smoothSlider) {
                 smoothSlider.addEventListener('input', (e) => {
@@ -2040,12 +2020,6 @@
         document.addEventListener('DOMContentLoaded', () => {
             updateStatus('Welcome to Expression Training Coach', 'ready');
             initializeBeautyControls();
-            // Initialize mirror mode
-            if (isMirrorMode) {
-                document.querySelectorAll('.video-wrapper').forEach(wrapper => {
-                    wrapper.classList.add('mirror-mode');
-                });
-            }
         });
     </script>
 </body>
