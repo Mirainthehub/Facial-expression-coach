@@ -658,6 +658,34 @@
             color: #ffffff;
         }
         
+        /* 语言切换 */
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        
+        .lang-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .lang-link:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
         /* 响应式设计 */
         @media (max-width: 768px) {
             .app-container {
@@ -689,6 +717,11 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- 语言切换 -->
+        <div class="language-switcher">
+            <a href="./index-en.html" class="lang-link">🇺🇸 English</a>
+        </div>
+        
         <!-- 状态指示器 -->
         <div class="status-indicator" id="statusIndicator">初始化中...</div>
         
