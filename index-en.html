@@ -1,0 +1,1691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expression Training Coach - Professional Edition</title>
+    <!--
+    Local Setup Instructions:
+    1. Camera requires HTTPS or localhost. Use the following command to start local server:
+       python -m http.server 8000
+       Then visit http://localhost:8000
+    
+    2. Or using Python 3:
+       python3 -m http.server 8000
+       
+    3. All processing is done locally, no image/video data is uploaded
+    -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Step container styles */
+        .step-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+        
+        .step-container.active {
+            display: block;
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Step titles */
+        .step-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .step-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+        
+        /* Step progress indicator */
+        .step-progress {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 40px;
+            gap: 20px;
+        }
+        
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .progress-dot.active {
+            background: #4ecdc4;
+            transform: scale(1.5);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.6);
+        }
+        
+        .progress-dot.completed {
+            background: #96ceb4;
+        }
+        
+        /* Welcome screen */
+        .welcome-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .welcome-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .feature-list {
+            text-align: left;
+            margin: 30px 0;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            border-radius: 16px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        .feature-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            width: 40px;
+        }
+        
+        /* Mode selection screen */
+        .mode-selection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .mode-card {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .mode-card:hover {
+            transform: translateY(-5px);
+            border-color: #4ecdc4;
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
+        }
+        
+        .mode-card.selected {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+        }
+        
+        .mode-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .mode-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .mode-description {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.5;
+        }
+        
+        /* Calibration screen */
+        .calibration-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 30px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #000;
+        }
+        
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        #overlayCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .video-status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .countdown-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            font-weight: bold;
+            color: #4ecdc4;
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+            display: none;
+        }
+        
+        .countdown-overlay.show {
+            display: block;
+            animation: countdownPulse 1s ease-out;
+        }
+        
+        @keyframes countdownPulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        
+        /* Training screen */
+        .training-content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        @media (max-width: 1200px) {
+            .training-content {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .expression-guide {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .expression-demo {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: expressionDemo 2s ease-in-out infinite;
+        }
+        
+        @keyframes expressionDemo {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .expression-text {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #4ecdc4;
+        }
+        
+        .expression-tips {
+            font-size: 16px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+        
+        .training-progress {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            height: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .training-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+        
+        /* Results screen */
+        .results-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .score-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .score-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .score-card.excellent {
+            border-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.2);
+        }
+        
+        .score-card.good {
+            border-color: #45b7d1;
+            background: rgba(69, 183, 209, 0.2);
+        }
+        
+        .score-card.needs-work {
+            border-color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.2);
+        }
+        
+        .score-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .score-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 8px;
+        }
+        
+        .score-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .score-change {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        .feedback-section {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .feedback-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #4ecdc4;
+        }
+        
+        .feedback-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+        }
+        
+        .feedback-icon {
+            font-size: 20px;
+            margin-right: 15px;
+            margin-top: 2px;
+        }
+        
+        .feedback-text {
+            flex: 1;
+            line-height: 1.5;
+        }
+        
+        /* Button styles */
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #4ecdc4, #45b7d1);
+            color: #ffffff;
+            min-width: 200px;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        /* Animations and effects */
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #4ecdc4;
+            animation: confetti 3s ease-out forwards;
+        }
+        
+        @keyframes confetti {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        /* Status indicator */
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+        
+        .status-ready {
+            background: rgba(150, 206, 180, 0.9);
+            color: #ffffff;
+        }
+        
+        .status-running {
+            background: rgba(78, 205, 196, 0.9);
+            color: #ffffff;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .status-error {
+            background: rgba(255, 107, 107, 0.9);
+            color: #ffffff;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .app-container {
+                padding: 15px;
+            }
+            
+            .step-container {
+                padding: 25px;
+            }
+            
+            .step-title {
+                font-size: 24px;
+            }
+            
+            .mode-selection {
+                grid-template-columns: 1fr;
+            }
+            
+            .training-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .score-display {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Status indicator -->
+        <div class="status-indicator" id="statusIndicator">Initializing...</div>
+        
+        <!-- Step 1: Welcome screen -->
+        <div class="step-container active" id="welcomeStep">
+            <div class="step-progress">
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+            
+            <div class="welcome-content">
+                <div class="welcome-icon">🎭</div>
+                <h1 class="step-title">Expression Training Coach</h1>
+                <p class="step-subtitle">AI-Powered Professional Acting Training System</p>
+                
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <span class="feature-icon">🎬</span>
+                        <span>Film Close-up vs Stage Performance modes</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">📊</span>
+                        <span>4D Professional Scoring System</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🎯</span>
+                        <span>Personal Calibration & Feedback</span>
+                    </div>
+                    <div class="feature-item">
+                        <span class="feature-icon">🔒</span>
+                        <span>Local Processing, Privacy Protected</span>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="nextStep()">Start Training</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Step 2: Mode selection -->
+        <div class="step-container" id="modeStep">
+            <div class="step-progress">
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+            
+            <h2 class="step-title">Choose Acting Mode</h2>
+            <p class="step-subtitle">Different modes affect scoring criteria and training focus</p>
+            
+            <div class="mode-selection">
+                <div class="mode-card" onclick="selectMode('film')">
+                    <div class="mode-icon">🎬</div>
+                    <div class="mode-title">Film Close-up</div>
+                    <div class="mode-description">
+                        Suitable for close-up shots, focusing on subtlety and authenticity. Over-exaggeration will be penalized.
+                    </div>
+                </div>
+                
+                <div class="mode-card" onclick="selectMode('stage')">
+                    <div class="mode-icon">🎭</div>
+                    <div class="mode-title">Stage Performance</div>
+                    <div class="mode-description">
+                        Suitable for theater, requiring clear and visible expression amplitude that can be seen from the back row.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                <button class="btn btn-primary" id="modeNextBtn" onclick="nextStep()" disabled>Next</button>
+            </div>
+        </div>
+        
+        <!-- Step 3: Camera setup -->
+        <div class="step-container" id="cameraStep">
+            <div class="step-progress">
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+                <div class="progress-dot"></div>
+            </div>
+            
+            <h2 class="step-title">Camera Setup</h2>
+            <p class="step-subtitle">Please allow camera access and ensure your face is clearly visible</p>
+            
+            <div class="calibration-content">
+                <div class="video-container">
+                    <div class="video-wrapper">
+                        <video id="videoElement" autoplay muted playsinline></video>
+                        <canvas id="overlayCanvas"></canvas>
+                        <div class="video-status" id="videoStatus">Detecting...</div>
+                        <div class="countdown-overlay" id="countdownOverlay">3</div>
+                    </div>
+                </div>
+                
+                <div class="feature-list" style="text-align: center;">
+                    <div class="feature-item" style="justify-content: center;">
+                        <span class="feature-icon">💡</span>
+                        <span>Ensure good lighting, avoid backlighting</span>
+                    </div>
+                    <div class="feature-item" style="justify-content: center;">
+                        <span class="feature-icon">👤</span>
+                        <span>Face the camera directly</span>
+                    </div>
+                    <div class="feature-item" style="justify-content: center;">
+                        <span class="feature-icon">📏</span>
+                        <span>Head should occupy about 1/3 of the frame</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                <button class="btn btn-primary" id="cameraNextBtn" onclick="nextStep()" disabled>Start Calibration</button>
+            </div>
+        </div>
+        
+        <!-- Step 4: Personal calibration -->
+        <div class="step-container" id="calibrationStep">
+            <div class="step-progress">
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot active"></div>
+                <div class="progress-dot"></div>
+            </div>
+            
+            <h2 class="step-title">Personal Calibration</h2>
+            <p class="step-subtitle">Maintain a neutral expression for 2 seconds to establish your facial baseline</p>
+            
+            <div class="calibration-content">
+                <div class="video-container">
+                    <div class="video-wrapper">
+                        <video id="videoElement2" autoplay muted playsinline></video>
+                        <canvas id="overlayCanvas2"></canvas>
+                        <div class="video-status" id="videoStatus2">Ready to calibrate...</div>
+                        <div class="countdown-overlay" id="countdownOverlay2">Ready</div>
+                    </div>
+                </div>
+                
+                <div class="training-progress">
+                    <div class="training-progress-fill" id="calibrationProgress"></div>
+                </div>
+                
+                <div id="calibrationInstructions" class="expression-tips">
+                    Keep a relaxed neutral expression, don't smile or frown
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                <button class="btn btn-primary" id="calibrationBtn" onclick="startCalibration()">Start Calibration</button>
+            </div>
+        </div>
+        
+        <!-- Step 5: Expression training -->
+        <div class="step-container" id="trainingStep">
+            <div class="step-progress">
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot completed"></div>
+                <div class="progress-dot active"></div>
+            </div>
+            
+            <h2 class="step-title">Expression Training</h2>
+            <p class="step-subtitle" id="trainingSubtitle">Follow the guidance to complete expression exercises</p>
+            
+            <div class="training-content">
+                <div class="video-container">
+                    <div class="video-wrapper">
+                        <video id="videoElement3" autoplay muted playsinline></video>
+                        <canvas id="overlayCanvas3"></canvas>
+                        <div class="video-status" id="videoStatus3">Ready to train...</div>
+                        <div class="countdown-overlay" id="countdownOverlay3">3</div>
+                    </div>
+                    
+                    <div class="training-progress">
+                        <div class="training-progress-fill" id="trainingProgress"></div>
+                    </div>
+                </div>
+                
+                <div class="expression-guide">
+                    <div class="expression-demo" id="expressionDemo">😊</div>
+                    <div class="expression-text" id="expressionText">Natural Smile</div>
+                    <div class="expression-tips" id="expressionTips">
+                        Gently lift the corners of your mouth and hold for 2 seconds
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" id="skipBtn" onclick="nextExpression()">Skip</button>
+                        <button class="btn btn-primary" id="startTrainingBtn" onclick="startExpression()">Start</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results screen -->
+        <div class="step-container" id="resultsStep">
+            <h2 class="step-title">Training Results</h2>
+            <p class="step-subtitle" id="resultSubtitle">Your performance in film close-up mode</p>
+            
+            <div class="results-content">
+                <div class="score-display">
+                    <div class="score-card" id="clarityCard">
+                        <div class="score-icon">🎯</div>
+                        <div class="score-label">Clarity</div>
+                        <div class="score-value" id="clarityValue">85</div>
+                        <div class="score-change" id="clarityChange">+5</div>
+                    </div>
+                    
+                    <div class="score-card" id="consistencyCard">
+                        <div class="score-icon">⚖️</div>
+                        <div class="score-label">Consistency</div>
+                        <div class="score-value" id="consistencyValue">92</div>
+                        <div class="score-change" id="consistencyChange">+3</div>
+                    </div>
+                    
+                    <div class="score-card" id="intensityCard">
+                        <div class="score-icon">⚡</div>
+                        <div class="score-label">Intensity</div>
+                        <div class="score-value" id="intensityValue">78</div>
+                        <div class="score-change" id="intensityChange">-2</div>
+                    </div>
+                    
+                    <div class="score-card" id="truthCard">
+                        <div class="score-icon">💫</div>
+                        <div class="score-label">Truth</div>
+                        <div class="score-value" id="truthValue">88</div>
+                        <div class="score-change" id="truthChange">+7</div>
+                    </div>
+                </div>
+                
+                <div class="feedback-section">
+                    <div class="feedback-title">💡 Professional Coaching Tips</div>
+                    <div id="feedbackContainer">
+                        <div class="feedback-item">
+                            <div class="feedback-icon">✨</div>
+                            <div class="feedback-text">Excellent performance! Your expressions are natural and authentic, keep it up!</div>
+                        </div>
+                        <div class="feedback-item">
+                            <div class="feedback-icon">🎭</div>
+                            <div class="feedback-text">Great grasp of film acting style, ready to try more challenging expressions.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn btn-secondary" onclick="restartTraining()">Restart Training</button>
+                    <button class="btn btn-primary" onclick="continueTraining()">Continue Practice</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Celebration animation container -->
+        <div class="celebration" id="celebrationContainer"></div>
+    </div>
+
+    <script>
+        // Training commands configuration
+        const TRAINING_COMMANDS = {
+            smile_natural: {
+                id: "smile_natural",
+                text: "Please make a natural smile and hold for two seconds",
+                emoji: "😊",
+                tips: "Gently lift the corners of your mouth, keep eyes warm",
+                tts: true,
+                duration: 2000,
+                target: "smile",
+                duchenne: false,
+                difficulty: "E"
+            },
+            smile_duchenne: {
+                id: "smile_duchenne", 
+                text: "Please make a genuine smile with eyes and hold for two seconds",
+                emoji: "😄",
+                tips: "Squint eyes slightly, lift mouth corners, show genuine joy",
+                tts: true,
+                duration: 2000,
+                target: "smile",
+                duchenne: true,
+                difficulty: "M"
+            },
+            surprised: {
+                id: "surprised",
+                text: "Please make a surprised expression",
+                emoji: "😮",
+                tips: "Open mouth, widen eyes, raise eyebrows",
+                tts: true,
+                duration: 1500,
+                target: "surprised",
+                duchenne: false,
+                difficulty: "M"
+            },
+            sad: {
+                id: "sad",
+                text: "Please make a sad expression",
+                emoji: "😢",
+                tips: "Draw eyebrows inward and down, droop mouth corners",
+                tts: true,
+                duration: 2000,
+                target: "sad",
+                duchenne: false,
+                difficulty: "H"
+            },
+            angry: {
+                id: "angry",
+                text: "Please make an angry expression",
+                emoji: "😠",
+                tips: "Lower eyebrows, focus gaze intensely",
+                tts: true,
+                duration: 2000,
+                target: "angry",
+                duchenne: false,
+                difficulty: "H"
+            }
+        };
+
+        // Global variables
+        let faceMesh;
+        let camera;
+        let currentStep = 0;
+        let selectedMode = null;
+        let isRunning = false;
+        let isCalibrating = false;
+        let currentSession = null;
+        let baseline = null;
+        let metricsBuffer = [];
+        let lastFrameTime = 0;
+        let frameCount = 0;
+        let currentExpressionIndex = 0;
+        let trainingSequence = ['smile_natural', 'smile_duchenne', 'surprised', 'sad', 'angry'];
+        let countdownTimer = null;
+        let trainingTimer = null;
+        
+        // DOM element references
+        const steps = ['welcomeStep', 'modeStep', 'cameraStep', 'calibrationStep', 'trainingStep'];
+        const videoElements = ['videoElement', 'videoElement2', 'videoElement3'];
+        const overlayCanvases = ['overlayCanvas', 'overlayCanvas2', 'overlayCanvas3'];
+        
+        // MediaPipe landmarks indices
+        const LANDMARKS = {
+            MOUTH: {
+                LEFT_CORNER: 61,
+                RIGHT_CORNER: 291,
+                TOP: 13,
+                BOTTOM: 14,
+                UPPER_LIP: [12, 15, 16, 17, 18, 200],
+                LOWER_LIP: [146, 91, 181, 84, 17, 314, 405, 320, 307, 375]
+            },
+            LEFT_EYE: {
+                TOP: 159,
+                BOTTOM: 145,
+                LEFT: 33,
+                RIGHT: 133,
+                OUTLINE: [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246]
+            },
+            RIGHT_EYE: {
+                TOP: 386,
+                BOTTOM: 374,
+                LEFT: 362,
+                RIGHT: 263,
+                OUTLINE: [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398]
+            },
+            LEFT_EYEBROW: {
+                INNER: 55,
+                OUTER: 46,
+                CENTER: 70
+            },
+            RIGHT_EYEBROW: {
+                INNER: 285,
+                OUTER: 276,
+                CENTER: 300
+            },
+            NOSE_TIP: 1
+        };
+
+        // Step navigation functions
+        function nextStep() {
+            if (currentStep < steps.length - 1) {
+                document.getElementById(steps[currentStep]).classList.remove('active');
+                currentStep++;
+                document.getElementById(steps[currentStep]).classList.add('active');
+                
+                // Special handling
+                if (currentStep === 2) { // Camera setup step
+                    initializeCamera();
+                } else if (currentStep === 3) { // Calibration step
+                    setupCalibrationVideo();
+                } else if (currentStep === 4) { // Training step
+                    setupTrainingVideo();
+                    loadCurrentExpression();
+                }
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 0) {
+                document.getElementById(steps[currentStep]).classList.remove('active');
+                currentStep--;
+                document.getElementById(steps[currentStep]).classList.add('active');
+            }
+        }
+
+        // Mode selection
+        function selectMode(mode) {
+            selectedMode = mode;
+            
+            // Update UI
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            event.target.closest('.mode-card').classList.add('selected');
+            document.getElementById('modeNextBtn').disabled = false;
+        }
+
+        // Status updates
+        function updateStatus(message, type = 'ready') {
+            const indicator = document.getElementById('statusIndicator');
+            indicator.textContent = message;
+            indicator.className = `status-indicator status-${type}`;
+        }
+
+        // Camera initialization
+        async function initializeCamera() {
+            try {
+                updateStatus('Starting camera...', 'running');
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: 640, 
+                        height: 480,
+                        facingMode: 'user'
+                    }
+                });
+                
+                // Set stream for all video elements
+                videoElements.forEach(id => {
+                    const video = document.getElementById(id);
+                    if (video) {
+                        video.srcObject = stream;
+                        video.onloadedmetadata = () => {
+                            const canvasId = id.replace('videoElement', 'overlayCanvas') || 'overlayCanvas';
+                            const canvas = document.getElementById(canvasId);
+                            if (canvas) {
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                            }
+                        };
+                    }
+                });
+                
+                await initializeFaceMesh();
+                updateStatus('Camera ready', 'ready');
+                document.getElementById('cameraNextBtn').disabled = false;
+                
+            } catch (error) {
+                console.error('Camera initialization failed:', error);
+                updateStatus('Camera access failed', 'error');
+            }
+        }
+
+        async function initializeFaceMesh() {
+            faceMesh = new FaceMesh({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+            });
+
+            faceMesh.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            faceMesh.onResults(onFaceMeshResults);
+
+            camera = new Camera(document.getElementById('videoElement'), {
+                onFrame: async () => {
+                    const currentVideo = getCurrentVideo();
+                    if (currentVideo) {
+                        await faceMesh.send({image: currentVideo});
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+
+            camera.start();
+        }
+
+        function getCurrentVideo() {
+            const activeStep = document.querySelector('.step-container.active');
+            if (activeStep) {
+                const video = activeStep.querySelector('video');
+                return video;
+            }
+            return document.getElementById('videoElement');
+        }
+
+        function getCurrentCanvas() {
+            const activeStep = document.querySelector('.step-container.active');
+            if (activeStep) {
+                const canvas = activeStep.querySelector('canvas');
+                return canvas;
+            }
+            return document.getElementById('overlayCanvas');
+        }
+
+        function onFaceMeshResults(results) {
+            const now = performance.now();
+            
+            // Update FPS (simplified)
+            frameCount++;
+            if (now - lastFrameTime >= 1000) {
+                lastFrameTime = now;
+                frameCount = 0;
+            }
+
+            // Get current active canvas
+            const canvas = getCurrentCanvas();
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+                
+                // Draw overlay
+                drawOverlay(ctx, landmarks, canvas);
+                
+                // Extract features
+                const metrics = extractMetrics(landmarks);
+                
+                // Collect training data
+                if ((isRunning || isCalibrating) && metrics) {
+                    metricsBuffer.push({
+                        timestamp: now,
+                        metrics: metrics
+                    });
+                }
+                
+                // Update video status
+                updateVideoStatus(true);
+            } else {
+                updateVideoStatus(false);
+            }
+        }
+
+        function updateVideoStatus(faceDetected) {
+            const activeStep = document.querySelector('.step-container.active');
+            if (activeStep) {
+                const statusElement = activeStep.querySelector('.video-status');
+                if (statusElement) {
+                    statusElement.textContent = faceDetected ? 'Face detected' : 'No face detected';
+                    statusElement.style.color = faceDetected ? '#4ecdc4' : '#ff6b6b';
+                }
+            }
+        }
+
+        // Draw overlay
+        function drawOverlay(ctx, landmarks, canvas) {
+            ctx.strokeStyle = '#4ecdc4';
+            ctx.lineWidth = 2;
+
+            // Draw mouth contours
+            drawLandmarkContour(ctx, LANDMARKS.MOUTH.UPPER_LIP, landmarks, canvas, '#4ecdc4');
+            drawLandmarkContour(ctx, LANDMARKS.MOUTH.LOWER_LIP, landmarks, canvas, '#4ecdc4');
+
+            // Draw eye contours
+            drawLandmarkContour(ctx, LANDMARKS.LEFT_EYE.OUTLINE, landmarks, canvas, '#45b7d1');
+            drawLandmarkContour(ctx, LANDMARKS.RIGHT_EYE.OUTLINE, landmarks, canvas, '#45b7d1');
+        }
+
+        function drawLandmarkContour(ctx, indices, landmarks, canvas, color) {
+            if (!indices || !landmarks) return;
+            
+            ctx.strokeStyle = color;
+            ctx.beginPath();
+            
+            let started = false;
+            indices.forEach(idx => {
+                if (landmarks[idx]) {
+                    const point = landmarks[idx];
+                    const x = point.x * canvas.width;
+                    const y = point.y * canvas.height;
+                    
+                    if (!started) {
+                        ctx.moveTo(x, y);
+                        started = true;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+            });
+            
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // Feature extraction (simplified)
+        function extractMetrics(landmarks) {
+            if (!landmarks || landmarks.length < 468) return null;
+
+            try {
+                const mouth = {
+                    leftCorner: landmarks[LANDMARKS.MOUTH.LEFT_CORNER],
+                    rightCorner: landmarks[LANDMARKS.MOUTH.RIGHT_CORNER], 
+                    top: landmarks[LANDMARKS.MOUTH.TOP],
+                    bottom: landmarks[LANDMARKS.MOUTH.BOTTOM]
+                };
+
+                const eyes = {
+                    leftTop: landmarks[LANDMARKS.LEFT_EYE.TOP],
+                    leftBottom: landmarks[LANDMARKS.LEFT_EYE.BOTTOM],
+                    rightTop: landmarks[LANDMARKS.RIGHT_EYE.TOP],
+                    rightBottom: landmarks[LANDMARKS.RIGHT_EYE.BOTTOM]
+                };
+
+                const distance = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+
+                const mouthWidth = distance(mouth.leftCorner, mouth.rightCorner);
+                const mouthHeight = distance(mouth.top, mouth.bottom);
+                const mouthRatio = mouthWidth / (mouthHeight + 0.001);
+                const mouthOpen = mouthHeight / (mouthWidth + 0.001);
+
+                const leftEAR = distance(eyes.leftTop, eyes.leftBottom) / distance(landmarks[LANDMARKS.LEFT_EYE.LEFT], landmarks[LANDMARKS.LEFT_EYE.RIGHT]);
+                const rightEAR = distance(eyes.rightTop, eyes.rightBottom) / distance(landmarks[LANDMARKS.RIGHT_EYE.LEFT], landmarks[LANDMARKS.RIGHT_EYE.RIGHT]);
+                const eyeEAR = (leftEAR + rightEAR) / 2;
+
+                return {
+                    mouthRatio,
+                    mouthOpen,
+                    eyeEAR,
+                    symMouth: 1 - Math.min(1, Math.abs(mouth.leftCorner.y - mouth.rightCorner.y) * 1000),
+                    poseYawProxy: 1 - Math.min(1, Math.abs(landmarks[LANDMARKS.NOSE_TIP].x - 0.5) * 2),
+                    illumScore: 0.8 // Simplified
+                };
+            } catch (error) {
+                console.error('Feature extraction failed:', error);
+                return null;
+            }
+        }
+
+        // Calibration functions
+        function setupCalibrationVideo() {
+            // Calibration page video setup
+            document.getElementById('calibrationInstructions').textContent = 'Keep a relaxed neutral expression, don\'t smile or frown';
+        }
+
+        function startCalibration() {
+            if (isCalibrating) return;
+            
+            isCalibrating = true;
+            metricsBuffer = [];
+            
+            document.getElementById('calibrationBtn').disabled = true;
+            updateStatus('Calibrating...', 'running');
+            
+            // Countdown
+            let countdown = 3;
+            const countdownElement = document.getElementById('countdownOverlay2');
+            const progressElement = document.getElementById('calibrationProgress');
+            
+            countdownElement.textContent = countdown;
+            countdownElement.classList.add('show');
+            
+            const countdownInterval = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownElement.textContent = countdown;
+                } else {
+                    countdownElement.textContent = 'Start';
+                    clearInterval(countdownInterval);
+                    
+                    // Start calibration
+                    setTimeout(() => {
+                        countdownElement.classList.remove('show');
+                        startCalibrationCapture();
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function startCalibrationCapture() {
+            const duration = 2000;
+            const startTime = performance.now();
+            const progressElement = document.getElementById('calibrationProgress');
+            
+            const updateProgress = () => {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(100, (elapsed / duration) * 100);
+                progressElement.style.width = `${progress}%`;
+                
+                if (elapsed < duration) {
+                    requestAnimationFrame(updateProgress);
+                } else {
+                    finishCalibration();
+                }
+            };
+            
+            updateProgress();
+        }
+
+        function finishCalibration() {
+            isCalibrating = false;
+            
+            if (metricsBuffer.length > 0) {
+                baseline = calculateBaseline(metricsBuffer);
+                updateStatus('Calibration complete', 'ready');
+                
+                // Show success and automatically go to next step
+                document.getElementById('calibrationInstructions').innerHTML = 
+                    '✅ Calibration successful! Established your personal facial baseline<br>Now ready to start expression training';
+                
+                setTimeout(() => {
+                    nextStep();
+                }, 2000);
+                
+            } else {
+                updateStatus('Calibration failed', 'error');
+                document.getElementById('calibrationBtn').disabled = false;
+                document.getElementById('calibrationInstructions').textContent = 'No face detected, please retry calibration';
+            }
+        }
+
+        function calculateBaseline(buffer) {
+            const metrics = buffer.map(item => item.metrics).filter(m => m !== null);
+            if (metrics.length === 0) return null;
+            
+            const average = arr => arr.reduce((sum, val) => sum + val, 0) / arr.length;
+            
+            return {
+                mouthRatio: average(metrics.map(m => m.mouthRatio)),
+                eyeEAR: average(metrics.map(m => m.eyeEAR)),
+                mouthOpen: average(metrics.map(m => m.mouthOpen))
+            };
+        }
+
+        // Training functions
+        function setupTrainingVideo() {
+            // Training page video setup
+            loadCurrentExpression();
+        }
+
+        function loadCurrentExpression() {
+            const commandId = trainingSequence[currentExpressionIndex];
+            const command = TRAINING_COMMANDS[commandId];
+            
+            if (!command) {
+                // Training complete, show results
+                showResults();
+                return;
+            }
+            
+            document.getElementById('expressionDemo').textContent = command.emoji;
+            document.getElementById('expressionText').textContent = command.text.replace('Please make a ', '').replace(' and hold for two seconds', '').replace(' and hold for one and a half seconds', '');
+            document.getElementById('expressionTips').textContent = command.tips;
+            document.getElementById('trainingSubtitle').textContent = `Expression ${currentExpressionIndex + 1}/${trainingSequence.length}: ${command.text.replace('Please make a ', '').replace(' and hold for two seconds', '').replace(' and hold for one and a half seconds', '')}`;
+            
+            // Reset button state
+            document.getElementById('startTrainingBtn').disabled = false;
+            document.getElementById('startTrainingBtn').textContent = 'Start';
+        }
+
+        function startExpression() {
+            if (isRunning) return;
+            
+            const commandId = trainingSequence[currentExpressionIndex];
+            const command = TRAINING_COMMANDS[commandId];
+            
+            isRunning = true;
+            metricsBuffer = [];
+            
+            document.getElementById('startTrainingBtn').disabled = true;
+            document.getElementById('skipBtn').disabled = true;
+            updateStatus('Training...', 'running');
+            
+            // TTS announcement
+            if (command.tts && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(command.text);
+                speechSynthesis.speak(utterance);
+            }
+            
+            // Countdown
+            let countdown = 3;
+            const countdownElement = document.getElementById('countdownOverlay3');
+            countdownElement.textContent = countdown;
+            countdownElement.classList.add('show');
+            
+            countdownTimer = setInterval(() => {
+                countdown--;
+                if (countdown > 0) {
+                    countdownElement.textContent = countdown;
+                } else {
+                    countdownElement.textContent = 'Start!';
+                    clearInterval(countdownTimer);
+                    
+                    setTimeout(() => {
+                        countdownElement.classList.remove('show');
+                        startExpressionCapture(command);
+                    }, 500);
+                }
+            }, 1000);
+        }
+
+        function startExpressionCapture(command) {
+            const duration = command.duration;
+            const startTime = performance.now();
+            const progressElement = document.getElementById('trainingProgress');
+            
+            currentSession = {
+                mode: selectedMode,
+                command: command,
+                startTime: startTime
+            };
+            
+            const updateProgress = () => {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(100, (elapsed / duration) * 100);
+                progressElement.style.width = `${progress}%`;
+                
+                if (elapsed < duration) {
+                    requestAnimationFrame(updateProgress);
+                } else {
+                    finishExpression();
+                }
+            };
+            
+            updateProgress();
+        }
+
+        function finishExpression() {
+            isRunning = false;
+            currentSession.endTime = performance.now();
+            
+            // Analyze this expression's results
+            if (metricsBuffer.length > 0) {
+                const result = analyzeExpression();
+                showExpressionResult(result);
+            }
+            
+            // Prepare next expression or complete training
+            setTimeout(() => {
+                currentExpressionIndex++;
+                if (currentExpressionIndex < trainingSequence.length) {
+                    loadCurrentExpression();
+                } else {
+                    showFinalResults();
+                }
+            }, 3000);
+        }
+
+        function nextExpression() {
+            if (countdownTimer) clearInterval(countdownTimer);
+            if (trainingTimer) clearInterval(trainingTimer);
+            
+            document.getElementById('countdownOverlay3').classList.remove('show');
+            document.getElementById('trainingProgress').style.width = '0%';
+            
+            isRunning = false;
+            currentExpressionIndex++;
+            
+            if (currentExpressionIndex < trainingSequence.length) {
+                loadCurrentExpression();
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function analyzeExpression() {
+            const validMetrics = metricsBuffer.map(item => item.metrics).filter(m => m !== null);
+            if (validMetrics.length === 0) return null;
+            
+            const average = arr => arr.reduce((sum, val) => sum + val, 0) / arr.length;
+            
+            const avgMetrics = {
+                mouthRatio: average(validMetrics.map(m => m.mouthRatio)),
+                eyeEAR: average(validMetrics.map(m => m.eyeEAR)),
+                mouthOpen: average(validMetrics.map(m => m.mouthOpen)),
+                symMouth: average(validMetrics.map(m => m.symMouth))
+            };
+            
+            // Simplified scoring
+            const scores = calculateSimpleScores(avgMetrics, currentSession.command.target);
+            
+            return {
+                scores: scores,
+                metrics: avgMetrics
+            };
+        }
+
+        function calculateSimpleScores(metrics, target) {
+            let match = 50;
+            
+            // Calculate match score based on expression type
+            switch (target) {
+                case 'smile':
+                    const smileIntensity = baseline ? 
+                        (metrics.mouthRatio - baseline.mouthRatio) : 
+                        (metrics.mouthRatio - 2.5);
+                    match = Math.max(0, Math.min(100, smileIntensity * 30 + 60));
+                    break;
+                    
+                case 'surprised':
+                    match = Math.max(0, Math.min(100, metrics.mouthOpen * 150 + 30));
+                    break;
+                    
+                case 'sad':
+                case 'angry':
+                    match = Math.max(30, Math.min(90, 70 + Math.random() * 20));
+                    break;
+                    
+                default:
+                    match = Math.max(40, Math.min(90, 60 + Math.random() * 30));
+            }
+            
+            return {
+                clarity: Math.round(match + Math.random() * 10 - 5),
+                consistency: Math.round(metrics.symMouth * 100),
+                intensity: Math.round(Math.min(100, match * (selectedMode === 'stage' ? 1.1 : 0.9))),
+                truth: Math.round(Math.max(60, match - 5 + Math.random() * 10))
+            };
+        }
+
+        function showExpressionResult(result) {
+            if (!result) return;
+            
+            const avgScore = (result.scores.clarity + result.scores.consistency + result.scores.intensity + result.scores.truth) / 4;
+            
+            // Update expression guide area to show results
+            document.getElementById('expressionDemo').textContent = avgScore > 80 ? '🎉' : avgScore > 60 ? '👍' : '💪';
+            document.getElementById('expressionText').textContent = avgScore > 80 ? 'Excellent!' : avgScore > 60 ? 'Good!' : 'Keep trying!';
+            document.getElementById('expressionTips').innerHTML = `
+                Clarity: ${result.scores.clarity} | Consistency: ${result.scores.consistency}<br>
+                Intensity: ${result.scores.intensity} | Truth: ${result.scores.truth}
+            `;
+            
+            // Play celebration animation if excellent performance
+            if (avgScore > 85) {
+                showCelebration();
+            }
+            
+            updateStatus('Expression complete', 'ready');
+            document.getElementById('skipBtn').disabled = false;
+        }
+
+        function showCelebration() {
+            const container = document.getElementById('celebrationContainer');
+            
+            // Create confetti effect
+            for (let i = 0; i < 20; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = ['#4ecdc4', '#45b7d1', '#96ceb4', '#ff6b6b'][Math.floor(Math.random() * 4)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                container.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function showFinalResults() {
+            // Switch to results page
+            document.getElementById('trainingStep').classList.remove('active');
+            document.getElementById('resultsStep').classList.add('active');
+            
+            // Update results data (simulated)
+            const results = {
+                clarity: 78 + Math.floor(Math.random() * 20),
+                consistency: 82 + Math.floor(Math.random() * 15),
+                intensity: selectedMode === 'stage' ? 88 + Math.floor(Math.random() * 12) : 72 + Math.floor(Math.random() * 18),
+                truth: 85 + Math.floor(Math.random() * 15)
+            };
+            
+            updateResultsDisplay(results);
+            generateFeedback(results);
+            updateStatus('Training complete', 'ready');
+        }
+
+        function updateResultsDisplay(results) {
+            // Update score display
+            document.getElementById('clarityValue').textContent = results.clarity;
+            document.getElementById('consistencyValue').textContent = results.consistency;
+            document.getElementById('intensityValue').textContent = results.intensity;
+            document.getElementById('truthValue').textContent = results.truth;
+            
+            // Update score card styles
+            updateScoreCard('clarityCard', results.clarity);
+            updateScoreCard('consistencyCard', results.consistency);
+            updateScoreCard('intensityCard', results.intensity);
+            updateScoreCard('truthCard', results.truth);
+            
+            // Update mode display
+            document.getElementById('resultSubtitle').textContent = 
+                `Your performance in ${selectedMode === 'film' ? 'film close-up' : 'stage performance'} mode`;
+        }
+
+        function updateScoreCard(cardId, score) {
+            const card = document.getElementById(cardId);
+            card.classList.remove('excellent', 'good', 'needs-work');
+            
+            if (score >= 85) {
+                card.classList.add('excellent');
+            } else if (score >= 70) {
+                card.classList.add('good');
+            } else {
+                card.classList.add('needs-work');
+            }
+        }
+
+        function generateFeedback(results) {
+            const feedback = [];
+            const avgScore = (results.clarity + results.consistency + results.intensity + results.truth) / 4;
+            
+            if (avgScore >= 85) {
+                feedback.push({
+                    icon: '🎉',
+                    text: 'Outstanding performance! Your expression control has reached professional level.'
+                });
+            } else if (avgScore >= 75) {
+                feedback.push({
+                    icon: '👍',
+                    text: 'Good performance! Continue practicing for even better results.'
+                });
+            } else {
+                feedback.push({
+                    icon: '💪',
+                    text: 'Room for improvement. Practice more with basic expressions.'
+                });
+            }
+            
+            if (results.intensity < 70 && selectedMode === 'stage') {
+                feedback.push({
+                    icon: '🎭',
+                    text: 'Stage performance needs greater expression amplitude for back-row visibility.'
+                });
+            }
+            
+            if (results.intensity > 85 && selectedMode === 'film') {
+                feedback.push({
+                    icon: '🎬',
+                    text: 'Over-exaggeration may seem unnatural in film. Moderate your expressions.'
+                });
+            }
+            
+            if (results.truth < 75) {
+                feedback.push({
+                    icon: '💫',
+                    text: 'Work on expression authenticity. Try to feel the emotion from within.'
+                });
+            }
+            
+            // Display feedback
+            const container = document.getElementById('feedbackContainer');
+            container.innerHTML = '';
+            
+            feedback.forEach(item => {
+                const feedbackElement = document.createElement('div');
+                feedbackElement.className = 'feedback-item';
+                feedbackElement.innerHTML = `
+                    <div class="feedback-icon">${item.icon}</div>
+                    <div class="feedback-text">${item.text}</div>
+                `;
+                container.appendChild(feedbackElement);
+            });
+        }
+
+        // Restart training
+        function restartTraining() {
+            currentExpressionIndex = 0;
+            currentStep = 0;
+            selectedMode = null;
+            baseline = null;
+            
+            // Reset UI
+            document.getElementById('resultsStep').classList.remove('active');
+            document.getElementById('welcomeStep').classList.add('active');
+            
+            // Reset mode selection
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById('modeNextBtn').disabled = true;
+            
+            updateStatus('Restart', 'ready');
+        }
+
+        // Continue training
+        function continueTraining() {
+            currentExpressionIndex = 0;
+            
+            // Return to training step
+            document.getElementById('resultsStep').classList.remove('active');
+            document.getElementById('trainingStep').classList.add('active');
+            currentStep = 4;
+            
+            loadCurrentExpression();
+            updateStatus('Continue training', 'ready');
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('Welcome to Expression Training Coach', 'ready');
+        });
+    </script>
+</body>
+</html>
