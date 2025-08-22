@@ -316,6 +316,13 @@
             display: none;
         }
         
+        .mirror-mode #videoElement,
+        .mirror-mode #beautifiedCanvas,
+        .mirror-mode #beautifiedCanvas2,
+        .mirror-mode #beautifiedCanvas3 {
+            transform: scaleX(-1);
+        }
+        
         #beautifiedCanvas {
             width: 100%;
             height: 100%;
@@ -779,6 +786,13 @@
                                 <span class="beauty-label">美颜</span>
                             </div>
                             
+                            <div class="beauty-toggle">
+                                <div class="beauty-switch active" id="mirrorSwitch" onclick="toggleMirror()">
+                                    <div class="beauty-switch-knob"></div>
+                                </div>
+                                <span class="beauty-label">镜像</span>
+                            </div>
+                            
                             <div class="beauty-slider" id="smoothSlider">
                                 <div class="beauty-slider-label">磨皮</div>
                                 <input type="range" min="0" max="100" value="50" id="smoothRange" oninput="updateBeauty()">
@@ -1083,6 +1097,7 @@
         let lastFrameTime = 0;
         let frameCount = 0;
         let currentExpressionIndex = 0;
+        let isMirrorMode = true; // 默认开启镜像模式
         let trainingSequence = ['smile_natural', 'smile_duchenne', 'surprised', 'sad', 'angry'];
         let countdownTimer = null;
         let trainingTimer = null;
@@ -1867,14 +1882,15 @@
         function toggleBeauty() {
             beautyEnabled = !beautyEnabled;
             
-            // 更新所有美颜开关的状态
-            document.querySelectorAll('.beauty-switch').forEach(switchEl => {
+            // 只更新美颜开关的状态，不影响镜像开关
+            const beautySwitch = document.getElementById('beautySwitch');
+            if (beautySwitch) {
                 if (beautyEnabled) {
-                    switchEl.classList.add('active');
+                    beautySwitch.classList.add('active');
                 } else {
-                    switchEl.classList.remove('active');
+                    beautySwitch.classList.remove('active');
                 }
-            });
+            }
             
             // 显示/隐藏滑块
             document.querySelectorAll('.beauty-slider').forEach(slider => {
@@ -1886,6 +1902,30 @@
             });
             
             updateBeauty();
+        }
+        
+        function toggleMirror() {
+            isMirrorMode = !isMirrorMode;
+            
+            // 更新镜像开关状态
+            const mirrorSwitch = document.getElementById('mirrorSwitch');
+            if (mirrorSwitch) {
+                if (isMirrorMode) {
+                    mirrorSwitch.classList.add('active');
+                } else {
+                    mirrorSwitch.classList.remove('active');
+                }
+            }
+            
+            // 更新所有video-wrapper的镜像模式
+            const videoWrappers = document.querySelectorAll('.video-wrapper');
+            videoWrappers.forEach(wrapper => {
+                if (isMirrorMode) {
+                    wrapper.classList.add('mirror-mode');
+                } else {
+                    wrapper.classList.remove('mirror-mode');
+                }
+            });
         }
         
         function updateBeauty() {
@@ -2000,6 +2040,12 @@
             updateStatus('欢迎使用表情训练教练', 'ready');
             // 启动美颜渲染循环
             renderBeautifiedVideo();
+            // 初始化镜像模式
+            if (isMirrorMode) {
+                document.querySelectorAll('.video-wrapper').forEach(wrapper => {
+                    wrapper.classList.add('mirror-mode');
+                });
+            }
         });
     </script>
 </body>
