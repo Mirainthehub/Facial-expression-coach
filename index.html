@@ -215,6 +215,93 @@
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
         
+        .beauty-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            z-index: 20;
+        }
+        
+        .beauty-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .beauty-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .beauty-switch.active {
+            background: #4ecdc4;
+        }
+        
+        .beauty-switch-knob {
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .beauty-switch.active .beauty-switch-knob {
+            transform: translateX(24px);
+        }
+        
+        .beauty-label {
+            font-size: 12px;
+            color: #fff;
+            font-weight: 500;
+        }
+        
+        .beauty-slider {
+            display: none;
+            margin-bottom: 8px;
+        }
+        
+        .beauty-slider.active {
+            display: block;
+        }
+        
+        .beauty-slider input {
+            width: 100px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .beauty-slider input::-webkit-slider-thumb {
+            width: 14px;
+            height: 14px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            cursor: pointer;
+            -webkit-appearance: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .beauty-slider-label {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 4px;
+        }
+        
         .video-wrapper {
             position: relative;
             width: 100%;
@@ -223,6 +310,13 @@
         }
         
         #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+        
+        #beautifiedCanvas {
             width: 100%;
             height: 100%;
             object-fit: cover;
@@ -603,6 +697,10 @@
                         <span>个人化校准与反馈</span>
                     </div>
                     <div class="feature-item">
+                        <span class="feature-icon">✨</span>
+                        <span>智能美颜，提升自信</span>
+                    </div>
+                    <div class="feature-item">
                         <span class="feature-icon">🔒</span>
                         <span>本地计算，保护隐私</span>
                     </div>
@@ -668,9 +766,34 @@
                 <div class="video-container">
                     <div class="video-wrapper">
                         <video id="videoElement" autoplay muted playsinline></video>
+                        <canvas id="beautifiedCanvas"></canvas>
                         <canvas id="overlayCanvas"></canvas>
                         <div class="video-status" id="videoStatus">检测中...</div>
                         <div class="countdown-overlay" id="countdownOverlay">3</div>
+                        
+                        <div class="beauty-controls">
+                            <div class="beauty-toggle">
+                                <div class="beauty-switch" id="beautySwitch" onclick="toggleBeauty()">
+                                    <div class="beauty-switch-knob"></div>
+                                </div>
+                                <span class="beauty-label">美颜</span>
+                            </div>
+                            
+                            <div class="beauty-slider" id="smoothSlider">
+                                <div class="beauty-slider-label">磨皮</div>
+                                <input type="range" min="0" max="100" value="50" id="smoothRange" oninput="updateBeauty()">
+                            </div>
+                            
+                            <div class="beauty-slider" id="brightnessSlider">
+                                <div class="beauty-slider-label">亮度</div>
+                                <input type="range" min="-50" max="50" value="10" id="brightnessRange" oninput="updateBeauty()">
+                            </div>
+                            
+                            <div class="beauty-slider" id="contrastSlider">
+                                <div class="beauty-slider-label">对比</div>
+                                <input type="range" min="-50" max="50" value="15" id="contrastRange" oninput="updateBeauty()">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -713,9 +836,34 @@
                 <div class="video-container">
                     <div class="video-wrapper">
                         <video id="videoElement2" autoplay muted playsinline></video>
+                        <canvas id="beautifiedCanvas2"></canvas>
                         <canvas id="overlayCanvas2"></canvas>
                         <div class="video-status" id="videoStatus2">准备校准...</div>
                         <div class="countdown-overlay" id="countdownOverlay2">准备</div>
+                        
+                        <div class="beauty-controls">
+                            <div class="beauty-toggle">
+                                <div class="beauty-switch" id="beautySwitch2" onclick="toggleBeauty()">
+                                    <div class="beauty-switch-knob"></div>
+                                </div>
+                                <span class="beauty-label">美颜</span>
+                            </div>
+                            
+                            <div class="beauty-slider" id="smoothSlider2">
+                                <div class="beauty-slider-label">磨皮</div>
+                                <input type="range" min="0" max="100" value="50" id="smoothRange2" oninput="updateBeauty()">
+                            </div>
+                            
+                            <div class="beauty-slider" id="brightnessSlider2">
+                                <div class="beauty-slider-label">亮度</div>
+                                <input type="range" min="-50" max="50" value="10" id="brightnessRange2" oninput="updateBeauty()">
+                            </div>
+                            
+                            <div class="beauty-slider" id="contrastSlider2">
+                                <div class="beauty-slider-label">对比</div>
+                                <input type="range" min="-50" max="50" value="15" id="contrastRange2" oninput="updateBeauty()">
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -751,9 +899,34 @@
                 <div class="video-container">
                     <div class="video-wrapper">
                         <video id="videoElement3" autoplay muted playsinline></video>
+                        <canvas id="beautifiedCanvas3"></canvas>
                         <canvas id="overlayCanvas3"></canvas>
                         <div class="video-status" id="videoStatus3">准备训练...</div>
                         <div class="countdown-overlay" id="countdownOverlay3">3</div>
+                        
+                        <div class="beauty-controls">
+                            <div class="beauty-toggle">
+                                <div class="beauty-switch" id="beautySwitch3" onclick="toggleBeauty()">
+                                    <div class="beauty-switch-knob"></div>
+                                </div>
+                                <span class="beauty-label">美颜</span>
+                            </div>
+                            
+                            <div class="beauty-slider" id="smoothSlider3">
+                                <div class="beauty-slider-label">磨皮</div>
+                                <input type="range" min="0" max="100" value="50" id="smoothRange3" oninput="updateBeauty()">
+                            </div>
+                            
+                            <div class="beauty-slider" id="brightnessSlider3">
+                                <div class="beauty-slider-label">亮度</div>
+                                <input type="range" min="-50" max="50" value="10" id="brightnessRange3" oninput="updateBeauty()">
+                            </div>
+                            
+                            <div class="beauty-slider" id="contrastSlider3">
+                                <div class="beauty-slider-label">对比</div>
+                                <input type="range" min="-50" max="50" value="15" id="contrastRange3" oninput="updateBeauty()">
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="training-progress">
@@ -913,6 +1086,14 @@
         let trainingSequence = ['smile_natural', 'smile_duchenne', 'surprised', 'sad', 'angry'];
         let countdownTimer = null;
         let trainingTimer = null;
+        
+        // 美颜相关变量
+        let beautyEnabled = false;
+        let beautySettings = {
+            smooth: 50,
+            brightness: 10,
+            contrast: 15
+        };
         
         // DOM 元素获取
         const steps = ['welcomeStep', 'modeStep', 'cameraStep', 'calibrationStep', 'trainingStep'];
@@ -1682,9 +1863,143 @@
             updateStatus('继续训练', 'ready');
         }
 
+        // 美颜功能函数
+        function toggleBeauty() {
+            beautyEnabled = !beautyEnabled;
+            
+            // 更新所有美颜开关的状态
+            document.querySelectorAll('.beauty-switch').forEach(switchEl => {
+                if (beautyEnabled) {
+                    switchEl.classList.add('active');
+                } else {
+                    switchEl.classList.remove('active');
+                }
+            });
+            
+            // 显示/隐藏滑块
+            document.querySelectorAll('.beauty-slider').forEach(slider => {
+                if (beautyEnabled) {
+                    slider.classList.add('active');
+                } else {
+                    slider.classList.remove('active');
+                }
+            });
+            
+            updateBeauty();
+        }
+        
+        function updateBeauty() {
+            if (!beautyEnabled) return;
+            
+            // 获取当前激活步骤的滑块值
+            const activeStep = document.querySelector('.step-container.active');
+            if (activeStep) {
+                const smoothRange = activeStep.querySelector('[id*="smoothRange"]');
+                const brightnessRange = activeStep.querySelector('[id*="brightnessRange"]');
+                const contrastRange = activeStep.querySelector('[id*="contrastRange"]');
+                
+                if (smoothRange) beautySettings.smooth = parseInt(smoothRange.value);
+                if (brightnessRange) beautySettings.brightness = parseInt(brightnessRange.value);
+                if (contrastRange) beautySettings.contrast = parseInt(contrastRange.value);
+            }
+        }
+        
+        function applyBeautyFilter(sourceCanvas, targetCanvas) {
+            if (!beautyEnabled) {
+                // 如果美颜关闭，直接复制原图
+                const sourceCtx = sourceCanvas.getContext('2d');
+                const targetCtx = targetCanvas.getContext('2d');
+                targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+                targetCtx.drawImage(sourceCanvas, 0, 0);
+                return;
+            }
+            
+            const sourceCtx = sourceCanvas.getContext('2d');
+            const targetCtx = targetCanvas.getContext('2d');
+            
+            // 获取图像数据
+            const imageData = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+            const data = imageData.data;
+            
+            // 应用美颜效果
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+                
+                // 磨皮效果 (简化版高斯模糊)
+                if (beautySettings.smooth > 0) {
+                    const smoothFactor = beautySettings.smooth / 100 * 0.3;
+                    r = r + (128 - r) * smoothFactor;
+                    g = g + (128 - g) * smoothFactor;
+                    b = b + (128 - b) * smoothFactor;
+                }
+                
+                // 亮度调整
+                const brightnessFactor = beautySettings.brightness / 50;
+                r = Math.max(0, Math.min(255, r + brightnessFactor * 30));
+                g = Math.max(0, Math.min(255, g + brightnessFactor * 30));
+                b = Math.max(0, Math.min(255, b + brightnessFactor * 30));
+                
+                // 对比度调整
+                const contrastFactor = (beautySettings.contrast + 50) / 50;
+                r = Math.max(0, Math.min(255, (r - 128) * contrastFactor + 128));
+                g = Math.max(0, Math.min(255, (g - 128) * contrastFactor + 128));
+                b = Math.max(0, Math.min(255, (b - 128) * contrastFactor + 128));
+                
+                data[i] = r;
+                data[i + 1] = g;
+                data[i + 2] = b;
+            }
+            
+            // 将处理后的数据绘制到目标画布
+            targetCtx.putImageData(imageData, 0, 0);
+        }
+        
+        function renderBeautifiedVideo() {
+            const activeStep = document.querySelector('.step-container.active');
+            if (!activeStep) return;
+            
+            const video = activeStep.querySelector('video');
+            const beautifiedCanvas = activeStep.querySelector('[id*="beautifiedCanvas"]');
+            
+            if (!video || !beautifiedCanvas || video.videoWidth === 0) {
+                requestAnimationFrame(renderBeautifiedVideo);
+                return;
+            }
+            
+            // 设置画布尺寸
+            if (beautifiedCanvas.width !== video.videoWidth) {
+                beautifiedCanvas.width = video.videoWidth;
+                beautifiedCanvas.height = video.videoHeight;
+            }
+            
+            const ctx = beautifiedCanvas.getContext('2d');
+            
+            if (beautyEnabled) {
+                // 先绘制视频帧到临时画布
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = video.videoWidth;
+                tempCanvas.height = video.videoHeight;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.drawImage(video, 0, 0);
+                
+                // 应用美颜滤镜
+                applyBeautyFilter(tempCanvas, beautifiedCanvas);
+            } else {
+                // 直接绘制原始视频
+                ctx.drawImage(video, 0, 0);
+            }
+            
+            // 继续下一帧
+            requestAnimationFrame(renderBeautifiedVideo);
+        }
+
         // 初始化
         document.addEventListener('DOMContentLoaded', () => {
             updateStatus('欢迎使用表情训练教练', 'ready');
+            // 启动美颜渲染循环
+            renderBeautifiedVideo();
         });
     </script>
 </body>

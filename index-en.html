@@ -540,6 +540,140 @@
             color: #ffffff;
         }
         
+        /* Beauty Controls */
+        .beauty-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            z-index: 20;
+            min-width: 250px;
+        }
+        
+        .beauty-title {
+            color: #4ecdc4;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        
+        .beauty-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .beauty-label {
+            font-size: 14px;
+            color: #ffffff;
+            font-weight: 500;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .toggle-switch.active {
+            background: #4ecdc4;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(20px);
+        }
+        
+        .beauty-control-group {
+            margin-bottom: 12px;
+        }
+        
+        .beauty-control-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .beauty-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .beauty-slider-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            min-width: 60px;
+        }
+        
+        .beauty-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+        
+        .beauty-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            cursor: pointer;
+            transition: background 0.15s ease-in-out;
+        }
+        
+        .beauty-slider::-webkit-slider-thumb:hover {
+            background: #45b7d1;
+        }
+        
+        .beauty-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #4ecdc4;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .beauty-value {
+            font-size: 12px;
+            color: #4ecdc4;
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        .beautified-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            pointer-events: none;
+        }
+
         /* Responsive design */
         @media (max-width: 768px) {
             .app-container {
@@ -668,9 +802,41 @@
                 <div class="video-container">
                     <div class="video-wrapper">
                         <video id="videoElement" autoplay muted playsinline></video>
+                        <canvas id="beautifiedCanvas" class="beautified-canvas"></canvas>
                         <canvas id="overlayCanvas"></canvas>
                         <div class="video-status" id="videoStatus">Detecting...</div>
                         <div class="countdown-overlay" id="countdownOverlay">3</div>
+                        
+                        <div class="beauty-controls">
+                            <div class="beauty-title">✨ Beauty Filter</div>
+                            <div class="beauty-toggle">
+                                <span class="beauty-label">Enable</span>
+                                <div class="toggle-switch" id="beautyToggle">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                            <div class="beauty-control-group">
+                                <div class="beauty-slider-container">
+                                    <span class="beauty-slider-label">Smooth</span>
+                                    <input type="range" class="beauty-slider" id="smoothSlider" min="0" max="100" value="50">
+                                    <span class="beauty-value" id="smoothValue">50</span>
+                                </div>
+                            </div>
+                            <div class="beauty-control-group">
+                                <div class="beauty-slider-container">
+                                    <span class="beauty-slider-label">Bright</span>
+                                    <input type="range" class="beauty-slider" id="brightnessSlider" min="-30" max="30" value="10">
+                                    <span class="beauty-value" id="brightnessValue">+10</span>
+                                </div>
+                            </div>
+                            <div class="beauty-control-group">
+                                <div class="beauty-slider-container">
+                                    <span class="beauty-slider-label">Contrast</span>
+                                    <input type="range" class="beauty-slider" id="contrastSlider" min="-30" max="50" value="15">
+                                    <span class="beauty-value" id="contrastValue">+15</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -713,6 +879,7 @@
                 <div class="video-container">
                     <div class="video-wrapper">
                         <video id="videoElement2" autoplay muted playsinline></video>
+                        <canvas id="beautifiedCanvas2" class="beautified-canvas"></canvas>
                         <canvas id="overlayCanvas2"></canvas>
                         <div class="video-status" id="videoStatus2">Ready to calibrate...</div>
                         <div class="countdown-overlay" id="countdownOverlay2">Ready</div>
@@ -751,6 +918,7 @@
                 <div class="video-container">
                     <div class="video-wrapper">
                         <video id="videoElement3" autoplay muted playsinline></video>
+                        <canvas id="beautifiedCanvas3" class="beautified-canvas"></canvas>
                         <canvas id="overlayCanvas3"></canvas>
                         <div class="video-status" id="videoStatus3">Ready to train...</div>
                         <div class="countdown-overlay" id="countdownOverlay3">3</div>
@@ -914,10 +1082,21 @@
         let countdownTimer = null;
         let trainingTimer = null;
         
+        // Beauty filter settings
+        let beautySettings = {
+            enabled: false,
+            smooth: 50,
+            brightness: 10,
+            contrast: 15
+        };
+        
+        let animationFrameId = null;
+        
         // DOM element references
         const steps = ['welcomeStep', 'modeStep', 'cameraStep', 'calibrationStep', 'trainingStep'];
         const videoElements = ['videoElement', 'videoElement2', 'videoElement3'];
         const overlayCanvases = ['overlayCanvas', 'overlayCanvas2', 'overlayCanvas3'];
+        const beautifiedCanvases = ['beautifiedCanvas', 'beautifiedCanvas2', 'beautifiedCanvas3'];
         
         // MediaPipe landmarks indices
         const LANDMARKS = {
@@ -1096,6 +1275,11 @@
             if (now - lastFrameTime >= 1000) {
                 lastFrameTime = now;
                 frameCount = 0;
+            }
+
+            // Apply beauty filter if enabled
+            if (beautySettings.enabled) {
+                applyBeautyFilter();
             }
 
             // Get current active canvas
@@ -1682,9 +1866,152 @@
             updateStatus('Continue training', 'ready');
         }
 
+        // Beauty filter functions
+        function applyBeautyFilter() {
+            const currentVideo = getCurrentVideo();
+            const currentBeautifiedCanvas = getCurrentBeautifiedCanvas();
+            
+            if (!currentVideo || !currentBeautifiedCanvas) return;
+            
+            const ctx = currentBeautifiedCanvas.getContext('2d');
+            
+            // Set canvas size to match video
+            currentBeautifiedCanvas.width = currentVideo.videoWidth;
+            currentBeautifiedCanvas.height = currentVideo.videoHeight;
+            
+            // Draw video frame to canvas
+            ctx.drawImage(currentVideo, 0, 0, currentBeautifiedCanvas.width, currentBeautifiedCanvas.height);
+            
+            // Get image data
+            const imageData = ctx.getImageData(0, 0, currentBeautifiedCanvas.width, currentBeautifiedCanvas.height);
+            const data = imageData.data;
+            
+            // Apply beauty filters
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i + 1];
+                let b = data[i + 2];
+                
+                // Skin smoothing effect
+                if (beautySettings.smooth > 0) {
+                    const smoothFactor = beautySettings.smooth / 100 * 0.3;
+                    r = r + (128 - r) * smoothFactor;
+                    g = g + (128 - g) * smoothFactor;
+                    b = b + (128 - b) * smoothFactor;
+                }
+                
+                // Brightness adjustment
+                if (beautySettings.brightness !== 0) {
+                    const brightnessFactor = beautySettings.brightness * 2;
+                    r = Math.max(0, Math.min(255, r + brightnessFactor));
+                    g = Math.max(0, Math.min(255, g + brightnessFactor));
+                    b = Math.max(0, Math.min(255, b + brightnessFactor));
+                }
+                
+                // Contrast adjustment
+                if (beautySettings.contrast !== 0) {
+                    const contrastFactor = (beautySettings.contrast + 100) / 100;
+                    r = Math.max(0, Math.min(255, ((r - 128) * contrastFactor) + 128));
+                    g = Math.max(0, Math.min(255, ((g - 128) * contrastFactor) + 128));
+                    b = Math.max(0, Math.min(255, ((b - 128) * contrastFactor) + 128));
+                }
+                
+                data[i] = r;
+                data[i + 1] = g;
+                data[i + 2] = b;
+            }
+            
+            // Put modified image data back
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        function getCurrentBeautifiedCanvas() {
+            const activeStep = document.querySelector('.step-container.active');
+            if (activeStep) {
+                const canvas = activeStep.querySelector('.beautified-canvas');
+                return canvas;
+            }
+            return document.getElementById('beautifiedCanvas');
+        }
+        
+        function startBeautyLoop() {
+            if (beautySettings.enabled && !animationFrameId) {
+                const renderLoop = () => {
+                    if (beautySettings.enabled) {
+                        applyBeautyFilter();
+                        animationFrameId = requestAnimationFrame(renderLoop);
+                    } else {
+                        animationFrameId = null;
+                    }
+                };
+                animationFrameId = requestAnimationFrame(renderLoop);
+            }
+        }
+        
+        function stopBeautyLoop() {
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+            
+            // Clear all beautified canvases
+            beautifiedCanvases.forEach(canvasId => {
+                const canvas = document.getElementById(canvasId);
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            });
+        }
+        
+        // Beauty controls event handlers
+        function initializeBeautyControls() {
+            const beautyToggle = document.getElementById('beautyToggle');
+            const smoothSlider = document.getElementById('smoothSlider');
+            const brightnessSlider = document.getElementById('brightnessSlider');
+            const contrastSlider = document.getElementById('contrastSlider');
+            
+            if (beautyToggle) {
+                beautyToggle.addEventListener('click', () => {
+                    beautySettings.enabled = !beautySettings.enabled;
+                    beautyToggle.classList.toggle('active', beautySettings.enabled);
+                    
+                    if (beautySettings.enabled) {
+                        startBeautyLoop();
+                    } else {
+                        stopBeautyLoop();
+                    }
+                });
+            }
+            
+            if (smoothSlider) {
+                smoothSlider.addEventListener('input', (e) => {
+                    beautySettings.smooth = parseInt(e.target.value);
+                    document.getElementById('smoothValue').textContent = beautySettings.smooth;
+                });
+            }
+            
+            if (brightnessSlider) {
+                brightnessSlider.addEventListener('input', (e) => {
+                    beautySettings.brightness = parseInt(e.target.value);
+                    const value = beautySettings.brightness;
+                    document.getElementById('brightnessValue').textContent = value >= 0 ? `+${value}` : value;
+                });
+            }
+            
+            if (contrastSlider) {
+                contrastSlider.addEventListener('input', (e) => {
+                    beautySettings.contrast = parseInt(e.target.value);
+                    const value = beautySettings.contrast;
+                    document.getElementById('contrastValue').textContent = value >= 0 ? `+${value}` : value;
+                });
+            }
+        }
+        
         // Initialization
         document.addEventListener('DOMContentLoaded', () => {
             updateStatus('Welcome to Expression Training Coach', 'ready');
+            initializeBeautyControls();
         });
     </script>
 </body>
