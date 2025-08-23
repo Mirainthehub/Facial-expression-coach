@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>京剧旦角表情训练系统 - 玉堂春风格</title>
+    
+    <!--
+    本地运行说明：
+    1. 摄像头需要 HTTPS 或 localhost 环境
+    2. 使用 Python 启动本地服务：
+       python -m http.server 8000
+       然后访问 http://localhost:8000
+    3. 或使用 Python 3:
+       python3 -m http.server 8000
+    4. 所有处理在本地完成，不上传任何图像或视频数据
+    5. 建议使用较强光源，便于捕捉眼部细微动作
+    -->
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'STKaiti', '楷体', serif;
+            background: linear-gradient(135deg, 
+                #8B0000 0%,    /* 深红 */
+                #B22222 25%,   /* 火砖红 */ 
+                #CD5C5C 50%,   /* 印度红 */
+                #F0E68C 75%,   /* 卡其色 */
+                #FFD700 100%   /* 金色 */
+            );
+            color: #2F1B14;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* 传统纹样背景 */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(255, 215, 0, 0.1) 0%, transparent 70%),
+                radial-gradient(circle at 80% 20%, rgba(220, 20, 60, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-areas: 
+                "header header header"
+                "sidebar main tips"
+                "results results results";
+            grid-template-rows: auto 1fr auto;
+            grid-template-columns: 320px 1fr 360px;
+            height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        /* 传统风格卡片 */
+        .card {
+            background: linear-gradient(145deg, 
+                rgba(255, 248, 220, 0.95) 0%,
+                rgba(255, 245, 238, 0.9) 100%);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            border: 3px solid;
+            border-image: linear-gradient(45deg, #DAA520, #B8860B, #CD853F) 1;
+            box-shadow: 
+                0 8px 32px rgba(139, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+            position: relative;
+        }
+        
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            border: 1px solid rgba(218, 165, 32, 0.3);
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        
+        /* Header - 戏曲评分面板 */
+        .header {
+            grid-area: header;
+            padding: 25px;
+        }
+        
+        .title-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .main-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #8B0000;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #B8860B;
+            font-style: italic;
+        }
+        
+        .opera-scores {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .opera-badge {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.3), rgba(240, 230, 140, 0.2));
+            border-radius: 12px;
+            border: 2px solid transparent;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        
+        .opera-badge.excellent {
+            border-color: #FFD700;
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.3), rgba(255, 245, 238, 0.4));
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        
+        .opera-badge.good {
+            border-color: #B8860B;
+            background: linear-gradient(145deg, rgba(184, 134, 11, 0.2), rgba(255, 245, 238, 0.3));
+        }
+        
+        .opera-badge.needs-work {
+            border-color: #CD853F;
+            background: linear-gradient(145deg, rgba(205, 133, 63, 0.2), rgba(255, 245, 238, 0.3));
+        }
+        
+        .badge-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #8B0000;
+            margin-bottom: 8px;
+        }
+        
+        .badge-chinese {
+            font-size: 12px;
+            color: #B8860B;
+            margin-bottom: 5px;
+        }
+        
+        .badge-score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2F1B14;
+        }
+        
+        .total-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .total-score {
+            font-size: 32px;
+            font-weight: bold;
+            color: #8B0000;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-bar {
+            flex: 1;
+            max-width: 400px;
+            height: 15px;
+            background: rgba(139, 0, 0, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #B8860B;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #DAA520, #B8860B);
+            width: 0%;
+            transition: width 0.8s ease;
+        }
+        
+        /* Sidebar - 训练控制 */
+        .sidebar {
+            grid-area: sidebar;
+            padding: 25px;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-label {
+            display: block;
+            margin-bottom: 12px;
+            font-weight: bold;
+            color: #8B0000;
+            font-size: 16px;
+        }
+        
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .role-option {
+            padding: 12px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.4), rgba(240, 230, 140, 0.2));
+            border: 2px solid rgba(184, 134, 11, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+        }
+        
+        .role-option.active {
+            border-color: #FFD700;
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.4), rgba(255, 245, 238, 0.5));
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        
+        select, button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #B8860B;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.8), rgba(240, 230, 140, 0.3));
+            color: #2F1B14;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+        
+        select:focus, button:hover {
+            border-color: #FFD700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            outline: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(145deg, #FFD700, #DAA520);
+            border-color: #B8860B;
+            color: #2F1B14;
+            margin-bottom: 12px;
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(145deg, rgba(184, 134, 11, 0.8), rgba(205, 133, 63, 0.6));
+            color: #FFF8DC;
+            margin-bottom: 12px;
+        }
+        
+        /* Main Video Area */
+        .main-area {
+            grid-area: main;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            background: #000;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 3px solid #B8860B;
+        }
+        
+        #videoElement {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        
+        #overlayCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transform: scaleX(-1);
+        }
+        
+        .video-status {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: rgba(139, 0, 0, 0.9);
+            color: #FFD700;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .training-info {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(145deg, rgba(139, 0, 0, 0.1), rgba(184, 134, 11, 0.1));
+            border-radius: 10px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .current-command {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8B0000;
+            margin-bottom: 8px;
+        }
+        
+        .opera-instruction {
+            font-size: 14px;
+            color: #B8860B;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        
+        .countdown {
+            font-size: 42px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin: 10px 0;
+        }
+        
+        /* Tips Panel - 戏曲指导 */
+        .tips-panel {
+            grid-area: tips;
+            padding: 20px;
+        }
+        
+        .tips-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8B0000;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .tip-item {
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.1), rgba(240, 230, 140, 0.2));
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+            border-left: 4px solid #FFD700;
+            border-top: 1px solid rgba(184, 134, 11, 0.3);
+        }
+        
+        /* Results Section */
+        .results {
+            grid-area: results;
+            padding: 20px;
+            display: none;
+        }
+        
+        .results.visible {
+            display: block;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .results-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #8B0000;
+        }
+        
+        .expression-level {
+            padding: 10px 20px;
+            background: linear-gradient(145deg, rgba(255, 215, 0, 0.3), rgba(184, 134, 11, 0.2));
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            border: 2px solid #B8860B;
+        }
+        
+        .charts-container {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .chart-section {
+            flex: 1;
+        }
+        
+        .chart-title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #8B0000;
+        }
+        
+        canvas.chart {
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.1), rgba(139, 0, 0, 0.05));
+            border-radius: 10px;
+            border: 2px solid rgba(184, 134, 11, 0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .app-container {
+                grid-template-areas: 
+                    "header"
+                    "sidebar"
+                    "main"
+                    "tips"
+                    "results";
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <div class="card header">
+            <div class="title-section">
+                <h1 class="main-title">京剧旦角表情训练</h1>
+                <p class="subtitle">玉堂春风格 · 传统戏曲表演艺术</p>
+            </div>
+            
+            <div class="opera-scores">
+                <div class="opera-badge" id="eyeBadge">
+                    <div class="badge-name">眼神</div>
+                    <div class="badge-chinese">Eye Expression</div>
+                    <div class="badge-score" id="eyeScore">0</div>
+                </div>
+                <div class="opera-badge" id="postureBadge">
+                    <div class="badge-name">身段</div>
+                    <div class="badge-chinese">Body Posture</div>
+                    <div class="badge-score" id="postureScore">0</div>
+                </div>
+                <div class="opera-badge" id="charmBadge">
+                    <div class="badge-name">韵味</div>
+                    <div class="badge-chinese">Opera Charm</div>
+                    <div class="badge-score" id="charmScore">0</div>
+                </div>
+                <div class="opera-badge" id="spiritBadge">
+                    <div class="badge-name">神韵</div>
+                    <div class="badge-chinese">Spirit Grace</div>
+                    <div class="badge-score" id="spiritScore">0</div>
+                </div>
+            </div>
+            
+            <div class="total-progress">
+                <div class="total-score" id="totalScore">0</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="card sidebar">
+            <div class="control-group">
+                <label class="control-label">角色行当</label>
+                <div class="role-selector">
+                    <div class="role-option active" data-role="dan">
+                        <div>🎭</div>
+                        <div>旦角</div>
+                    </div>
+                    <div class="role-option" data-role="qingyi">
+                        <div>👸</div>
+                        <div>青衣</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label class="control-label" for="operaCommandSelect">戏曲表情</label>
+                <select id="operaCommandSelect">
+                    <option value="shy_glance">娇羞斜视（3秒）</option>
+                    <option value="sorrowful_gaze">哀怨凝神（3秒）</option>
+                    <option value="startled_eyes">惊恐瞪目（2秒）</option>
+                    <option value="joyful_flutter">欣喜流眄（3秒）</option>
+                    <option value="angry_stare">嗔怒直视（2.5秒）</option>
+                    <option value="thinking_pose">沉思垂眸（3秒）</option>
+                    <option value="elegant_smile">雅致含笑（3秒）</option>
+                    <option value="distant_gaze">远望凝眸（3秒）</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button class="btn-primary" id="startBtn">开始练习</button>
+                <button class="btn-secondary" id="nextBtn">下一个表情</button>
+                <button class="btn-secondary" id="calibrateBtn">个人校准</button>
+            </div>
+        </div>
+        
+        <!-- Main Video Area -->
+        <div class="card main-area">
+            <div class="video-container">
+                <video id="videoElement" autoplay muted playsinline></video>
+                <canvas id="overlayCanvas"></canvas>
+                <div class="video-status" id="videoStatus">等待摄像头初始化...</div>
+            </div>
+            
+            <div class="training-info">
+                <div class="current-command" id="currentCommand">选择戏曲表情并点击开始练习</div>
+                <div class="opera-instruction" id="operaInstruction">体验传统京剧旦角表演艺术</div>
+                <div class="countdown" id="countdown"></div>
+            </div>
+        </div>
+        
+        <!-- Tips Panel -->
+        <div class="card tips-panel">
+            <div class="tips-title">
+                <span>🎭</span>
+                <span>戏曲指导</span>
+            </div>
+            <div id="tipsContainer">
+                <div class="tip-item">准备开始戏曲表情训练，感受传统旦角的优雅与韵味</div>
+            </div>
+        </div>
+        
+        <!-- Results Section -->
+        <div class="card results" id="resultsSection">
+            <div class="results-header">
+                <div class="results-title" id="resultsTitle">训练结果</div>
+                <div class="expression-level" id="expressionLevel">程式标准</div>
+            </div>
+            
+            <div class="charts-container">
+                <div class="chart-section">
+                    <div class="chart-title">戏曲四韵</div>
+                    <canvas id="operaRadarChart" class="chart" width="300" height="200"></canvas>
+                </div>
+                <div class="chart-section">
+                    <div class="chart-title">眼神技法</div>
+                    <canvas id="eyeChart" class="chart" width="300" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 京剧旦角表情训练口令配置
+        const OPERA_COMMANDS = {
+            shy_glance: {
+                id: "shy_glance",
+                name: "娇羞斜视",
+                text: "请做娇羞斜视的表情，眼神轻柔含蓄，保持三秒",
+                instruction: "眼神斜视，含羞带怯，如初见情郎时的娇态",
+                tts: true,
+                duration: 3000,
+                target: "shy",
+                difficulty: "M",
+                eyePattern: "sidelong_glance",
+                bodyRequirement: "slight_head_tilt"
+            },
+            sorrowful_gaze: {
+                id: "sorrowful_gaze",
+                name: "哀怨凝神",
+                text: "请做哀怨凝神的表情，眼含愁绪，保持三秒",
+                instruction: "凝神远望，眼中含泪，如思君不见的哀怨",
+                tts: true,
+                duration: 3000,
+                target: "sorrow",
+                difficulty: "H",
+                eyePattern: "deep_gaze",
+                bodyRequirement: "upward_gaze"
+            },
+            startled_eyes: {
+                id: "startled_eyes",
+                name: "惊恐瞪目",
+                text: "请做惊恐瞪目的表情，双目圆睁，保持两秒",
+                instruction: "双眼圆睁，神色惊恐，如遇不测时的震惊",
+                tts: true,
+                duration: 2000,
+                target: "startled",
+                difficulty: "M",
+                eyePattern: "wide_eyes",
+                bodyRequirement: "rigid_posture"
+            },
+            joyful_flutter: {
+                id: "joyful_flutter",
+                name: "欣喜流眄",
+                text: "请做欣喜流眄的表情，眼神流转生辉，保持三秒",
+                instruction: "眼神流转，喜上眉梢，如得佳音时的欣悦",
+                tts: true,
+                duration: 3000,
+                target: "joy",
+                difficulty: "M",
+                eyePattern: "flowing_glance",
+                bodyRequirement: "light_movement"
+            },
+            angry_stare: {
+                id: "angry_stare",
+                name: "嗔怒直视",
+                text: "请做嗔怒直视的表情，怒目而视，保持两秒半",
+                instruction: "怒目直视，威严凛然，如受委屈时的愤懑",
+                tts: true,
+                duration: 2500,
+                target: "anger",
+                difficulty: "H",
+                eyePattern: "direct_stare",
+                bodyRequirement: "upright_posture"
+            },
+            thinking_pose: {
+                id: "thinking_pose",
+                name: "沉思垂眸",
+                text: "请做沉思垂眸的表情，目光下垂沉思，保持三秒",
+                instruction: "垂眸沉思，神态安详，如深思熟虑时的静谧",
+                tts: true,
+                duration: 3000,
+                target: "contemplation",
+                difficulty: "M",
+                eyePattern: "downward_gaze",
+                bodyRequirement: "composed_posture"
+            },
+            elegant_smile: {
+                id: "elegant_smile",
+                name: "雅致含笑",
+                text: "请做雅致含笑的表情，浅笑盈盈，保持三秒",
+                instruction: "浅笑含春，雅致端庄，如大家闺秀的温婉",
+                tts: true,
+                duration: 3000,
+                target: "elegant_joy",
+                difficulty: "M",
+                eyePattern: "gentle_smile",
+                bodyRequirement: "graceful_posture"
+            },
+            distant_gaze: {
+                id: "distant_gaze",
+                name: "远望凝眸",
+                text: "请做远望凝眸的表情，目光深远，保持三秒",
+                instruction: "凝眸远望，思绪悠远，如盼君归来的深情",
+                tts: true,
+                duration: 3000,
+                target: "longing",
+                difficulty: "H",
+                eyePattern: "distant_look",
+                bodyRequirement: "upward_tilt"
+            }
+        };
+
+        // 京剧面部关键点 - 特别注重眼部细节
+        const OPERA_LANDMARKS = {
+            // 眼部 - 京剧表演的核心
+            LEFT_EYE: {
+                INNER_CORNER: 33,   // 内眼角
+                OUTER_CORNER: 133,  // 外眼角
+                UPPER_LID: 159,     // 上眼睑
+                LOWER_LID: 145,     // 下眼睑
+                PUPIL_AREA: [468, 469, 470, 471], // 瞳孔区域（简化）
+                OUTLINE: [33, 7, 163, 144, 145, 153, 154, 155, 133, 173, 157, 158, 159, 160, 161, 246]
+            },
+            RIGHT_EYE: {
+                INNER_CORNER: 362,
+                OUTER_CORNER: 263,
+                UPPER_LID: 386,
+                LOWER_LID: 374,
+                PUPIL_AREA: [472, 473, 474, 475],
+                OUTLINE: [362, 382, 381, 380, 374, 373, 390, 249, 263, 466, 388, 387, 386, 385, 384, 398]
+            },
+            // 眉毛 - 情感表达的重要部分
+            LEFT_EYEBROW: {
+                INNER: 55,
+                ARCH: 70,
+                OUTER: 46
+            },
+            RIGHT_EYEBROW: {
+                INNER: 285,
+                ARCH: 300,
+                OUTER: 276
+            },
+            // 嘴部 - 配合眼神的表情
+            MOUTH: {
+                LEFT_CORNER: 61,
+                RIGHT_CORNER: 291,
+                UPPER_LIP: 13,
+                LOWER_LIP: 14,
+                CUPID_BOW: [12, 15] // 唇峰
+            },
+            // 面部轮廓 - 整体姿态
+            FACE: {
+                CHIN: 175,
+                LEFT_CHEEK: 116,
+                RIGHT_CHEEK: 345,
+                FOREHEAD: 10
+            },
+            NOSE_TIP: 1
+        };
+
+        // 全局变量
+        let faceMesh;
+        let camera;
+        let currentRole = 'dan';  // 'dan' or 'qingyi'
+        let isTraining = false;
+        let isCalibrating = false;
+        let operaBaseline = null; // 戏曲表演基线
+        let metricsBuffer = [];
+        let currentSession = null;
+        let frameCount = 0;
+        let lastFrameTime = 0;
+
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeCamera();
+            setupEventListeners();
+            updateUI();
+        });
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 角色切换
+            document.querySelectorAll('.role-option').forEach(option => {
+                option.addEventListener('click', () => {
+                    document.querySelectorAll('.role-option').forEach(o => o.classList.remove('active'));
+                    option.classList.add('active');
+                    currentRole = option.dataset.role;
+                    updateUI();
+                });
+            });
+
+            // 按钮事件
+            document.getElementById('startBtn').addEventListener('click', startOperaTraining);
+            document.getElementById('nextBtn').addEventListener('click', nextOperaExpression);
+            document.getElementById('calibrateBtn').addEventListener('click', operaCalibrate);
+
+            // 表情选择
+            document.getElementById('operaCommandSelect').addEventListener('change', updateUI);
+        }
+
+        // 初始化摄像头
+        async function initializeCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, facingMode: 'user' }
+                });
+                
+                const videoElement = document.getElementById('videoElement');
+                videoElement.srcObject = stream;
+                
+                videoElement.onloadedmetadata = () => {
+                    const canvas = document.getElementById('overlayCanvas');
+                    canvas.width = videoElement.videoWidth;
+                    canvas.height = videoElement.videoHeight;
+                };
+
+                await initializeFaceMesh();
+                document.getElementById('videoStatus').textContent = '戏曲训练系统就绪';
+                
+            } catch (error) {
+                console.error('摄像头初始化失败:', error);
+                document.getElementById('videoStatus').textContent = '摄像头访问失败';
+            }
+        }
+
+        async function initializeFaceMesh() {
+            faceMesh = new FaceMesh({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+            });
+
+            faceMesh.setOptions({
+                maxNumFaces: 1,
+                refineLandmarks: true,
+                minDetectionConfidence: 0.7, // 提高检测精度
+                minTrackingConfidence: 0.7
+            });
+
+            faceMesh.onResults(onOperaResults);
+
+            camera = new Camera(document.getElementById('videoElement'), {
+                onFrame: async () => {
+                    await faceMesh.send({image: document.getElementById('videoElement')});
+                },
+                width: 640,
+                height: 480
+            });
+
+            camera.start();
+        }
+
+        // 京剧表情结果处理
+        function onOperaResults(results) {
+            const now = performance.now();
+            
+            frameCount++;
+            if (now - lastFrameTime >= 1000) {
+                lastFrameTime = now;
+                frameCount = 0;
+            }
+
+            const canvas = document.getElementById('overlayCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+                const landmarks = results.multiFaceLandmarks[0];
+                
+                // 绘制戏曲表情轮廓
+                drawOperaOverlay(ctx, landmarks);
+                
+                // 提取戏曲表情特征
+                const operaMetrics = extractOperaMetrics(landmarks);
+                
+                // 收集训练数据
+                if ((isTraining || isCalibrating) && operaMetrics) {
+                    metricsBuffer.push({
+                        timestamp: now,
+                        metrics: operaMetrics
+                    });
+                }
+                
+                document.getElementById('videoStatus').textContent = '面部识别正常 - 戏曲模式';
+            } else {
+                document.getElementById('videoStatus').textContent = '未检测到面部';
+            }
+        }
+
+        // 绘制戏曲表情轮廓 - 突出眼部
+        function drawOperaOverlay(ctx, landmarks) {
+            // 眼部轮廓 - 金色，更加突出
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            drawLandmarkContour(ctx, OPERA_LANDMARKS.LEFT_EYE.OUTLINE, landmarks);
+            drawLandmarkContour(ctx, OPERA_LANDMARKS.RIGHT_EYE.OUTLINE, landmarks);
+            
+            // 眉毛轮廓 - 深红色
+            ctx.strokeStyle = '#8B0000';
+            ctx.lineWidth = 2;
+            drawEyebrowLine(ctx, landmarks, 'left');
+            drawEyebrowLine(ctx, landmarks, 'right');
+            
+            // 嘴部轮廓 - 暗金色
+            ctx.strokeStyle = '#B8860B';
+            ctx.lineWidth = 2;
+            drawMouthContour(ctx, landmarks);
+            
+            // 眼神方向指示 - 戏曲特色
+            drawEyeGazeDirection(ctx, landmarks);
+        }
+
+        function drawLandmarkContour(ctx, indices, landmarks) {
+            if (!indices || !landmarks) return;
+            
+            ctx.beginPath();
+            let started = false;
+            
+            indices.forEach(idx => {
+                if (landmarks[idx]) {
+                    const point = landmarks[idx];
+                    const x = point.x * ctx.canvas.width;
+                    const y = point.y * ctx.canvas.height;
+                    
+                    if (!started) {
+                        ctx.moveTo(x, y);
+                        started = true;
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+            });
+            
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        function drawEyebrowLine(ctx, landmarks, side) {
+            const brow = side === 'left' ? OPERA_LANDMARKS.LEFT_EYEBROW : OPERA_LANDMARKS.RIGHT_EYEBROW;
+            
+            ctx.beginPath();
+            if (landmarks[brow.INNER] && landmarks[brow.ARCH] && landmarks[brow.OUTER]) {
+                const inner = landmarks[brow.INNER];
+                const arch = landmarks[brow.ARCH];
+                const outer = landmarks[brow.OUTER];
+                
+                ctx.moveTo(inner.x * ctx.canvas.width, inner.y * ctx.canvas.height);
+                ctx.quadraticCurveTo(
+                    arch.x * ctx.canvas.width, arch.y * ctx.canvas.height,
+                    outer.x * ctx.canvas.width, outer.y * ctx.canvas.height
+                );
+            }
+            ctx.stroke();
+        }
+
+        function drawMouthContour(ctx, landmarks) {
+            const mouth = OPERA_LANDMARKS.MOUTH;
+            if (landmarks[mouth.LEFT_CORNER] && landmarks[mouth.RIGHT_CORNER] && 
+                landmarks[mouth.UPPER_LIP] && landmarks[mouth.LOWER_LIP]) {
+                
+                ctx.beginPath();
+                const left = landmarks[mouth.LEFT_CORNER];
+                const right = landmarks[mouth.RIGHT_CORNER];
+                const upper = landmarks[mouth.UPPER_LIP];
+                const lower = landmarks[mouth.LOWER_LIP];
+                
+                ctx.moveTo(left.x * ctx.canvas.width, left.y * ctx.canvas.height);
+                ctx.quadraticCurveTo(
+                    upper.x * ctx.canvas.width, upper.y * ctx.canvas.height,
+                    right.x * ctx.canvas.width, right.y * ctx.canvas.height
+                );
+                ctx.quadraticCurveTo(
+                    lower.x * ctx.canvas.width, lower.y * ctx.canvas.height,
+                    left.x * ctx.canvas.width, left.y * ctx.canvas.height
+                );
+                ctx.stroke();
+            }
+        }
+
+        function drawEyeGazeDirection(ctx, landmarks) {
+            // 简化的眼神方向指示
+            const leftEye = landmarks[OPERA_LANDMARKS.LEFT_EYE.INNER_CORNER];
+            const rightEye = landmarks[OPERA_LANDMARKS.RIGHT_EYE.INNER_CORNER];
+            
+            if (leftEye && rightEye) {
+                ctx.fillStyle = 'rgba(255, 215, 0, 0.6)';
+                ctx.beginPath();
+                ctx.arc(leftEye.x * ctx.canvas.width, leftEye.y * ctx.canvas.height, 3, 0, Math.PI * 2);
+                ctx.arc(rightEye.x * ctx.canvas.width, rightEye.y * ctx.canvas.height, 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        /**
+         * 京剧表情特征提取
+         * 专注于眼神、姿态、韵味等戏曲表演要素
+         */
+        function extractOperaMetrics(landmarks) {
+            if (!landmarks || landmarks.length < 468) return null;
+
+            try {
+                // 眼部特征 - 戏曲表演的核心
+                const leftEye = {
+                    inner: landmarks[OPERA_LANDMARKS.LEFT_EYE.INNER_CORNER],
+                    outer: landmarks[OPERA_LANDMARKS.LEFT_EYE.OUTER_CORNER],
+                    upper: landmarks[OPERA_LANDMARKS.LEFT_EYE.UPPER_LID],
+                    lower: landmarks[OPERA_LANDMARKS.LEFT_EYE.LOWER_LID]
+                };
+                
+                const rightEye = {
+                    inner: landmarks[OPERA_LANDMARKS.RIGHT_EYE.INNER_CORNER],
+                    outer: landmarks[OPERA_LANDMARKS.RIGHT_EYE.OUTER_CORNER],
+                    upper: landmarks[OPERA_LANDMARKS.RIGHT_EYE.UPPER_LID],
+                    lower: landmarks[OPERA_LANDMARKS.RIGHT_EYE.LOWER_LID]
+                };
+
+                // 眉毛特征
+                const leftBrow = {
+                    inner: landmarks[OPERA_LANDMARKS.LEFT_EYEBROW.INNER],
+                    arch: landmarks[OPERA_LANDMARKS.LEFT_EYEBROW.ARCH],
+                    outer: landmarks[OPERA_LANDMARKS.LEFT_EYEBROW.OUTER]
+                };
+                
+                const rightBrow = {
+                    inner: landmarks[OPERA_LANDMARKS.RIGHT_EYEBROW.INNER],
+                    arch: landmarks[OPERA_LANDMARKS.RIGHT_EYEBROW.ARCH],
+                    outer: landmarks[OPERA_LANDMARKS.RIGHT_EYEBROW.OUTER]
+                };
+
+                // 嘴部特征
+                const mouth = {
+                    left: landmarks[OPERA_LANDMARKS.MOUTH.LEFT_CORNER],
+                    right: landmarks[OPERA_LANDMARKS.MOUTH.RIGHT_CORNER],
+                    upper: landmarks[OPERA_LANDMARKS.MOUTH.UPPER_LIP],
+                    lower: landmarks[OPERA_LANDMARKS.MOUTH.LOWER_LIP]
+                };
+
+                const distance = (p1, p2) => Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+
+                // 1. 眼神表情强度 (Eye Expression Intensity)
+                const leftEyeOpenness = distance(leftEye.upper, leftEye.lower) / distance(leftEye.inner, leftEye.outer);
+                const rightEyeOpenness = distance(rightEye.upper, rightEye.lower) / distance(rightEye.inner, rightEye.outer);
+                const eyeExpression = (leftEyeOpenness + rightEyeOpenness) / 2;
+
+                // 2. 眼神方向 (Gaze Direction) - 戏曲中的"眼神活"
+                const leftEyeCenter = {
+                    x: (leftEye.inner.x + leftEye.outer.x) / 2,
+                    y: (leftEye.upper.y + leftEye.lower.y) / 2
+                };
+                const rightEyeCenter = {
+                    x: (rightEye.inner.x + rightEye.outer.x) / 2,
+                    y: (rightEye.upper.y + rightEye.lower.y) / 2
+                };
+                
+                // 简化的眼神方向计算
+                const gazeDirection = Math.abs(leftEyeCenter.x - rightEyeCenter.x) * 1000;
+
+                // 3. 眉眼协调 (Brow-Eye Coordination)
+                const leftBrowEyeDistance = distance(leftBrow.arch, leftEye.upper);
+                const rightBrowEyeDistance = distance(rightBrow.arch, rightEye.upper);
+                const browEyeCoordination = 1 - Math.abs(leftBrowEyeDistance - rightBrowEyeDistance);
+
+                // 4. 面部对称性 (Facial Symmetry)
+                const eyeSymmetry = 1 - Math.abs(leftEyeOpenness - rightEyeOpenness);
+                const browSymmetry = 1 - Math.abs(leftBrow.arch.y - rightBrow.arch.y) * 1000;
+                const mouthSymmetry = 1 - Math.abs(mouth.left.y - mouth.right.y) * 1000;
+                const facialSymmetry = (eyeSymmetry + browSymmetry + mouthSymmetry) / 3;
+
+                // 5. 嘴部表情 (Mouth Expression)
+                const mouthWidth = distance(mouth.left, mouth.right);
+                const mouthHeight = distance(mouth.upper, mouth.lower);
+                const mouthExpression = mouthHeight / mouthWidth;
+
+                // 6. 整体姿态 (Overall Posture) - 基于面部角度
+                const noseTip = landmarks[OPERA_LANDMARKS.NOSE_TIP];
+                const chin = landmarks[OPERA_LANDMARKS.FACE.CHIN];
+                const faceAngle = Math.atan2(chin.y - noseTip.y, chin.x - noseTip.x);
+                const postureGrace = 1 - Math.abs(faceAngle) / Math.PI;
+
+                // 7. 眼神深度 (Eye Depth) - 戏曲表演的"神韵"
+                const eyeDepth = eyeExpression * browEyeCoordination;
+
+                // 8. 表情变化幅度 (Expression Range)
+                const expressionRange = Math.abs(eyeExpression - 0.3) + Math.abs(mouthExpression - 0.1);
+
+                return {
+                    // 戏曲四韵
+                    eyeExpression,      // 眼神
+                    postureGrace,       // 身段  
+                    operaCharm: (eyeDepth + facialSymmetry) / 2,  // 韵味
+                    spiritGrace: eyeDepth,  // 神韵
+                    
+                    // 技术指标
+                    gazeDirection,
+                    browEyeCoordination,
+                    facialSymmetry,
+                    mouthExpression,
+                    expressionRange,
+                    
+                    // 原始数据
+                    leftEyeOpenness,
+                    rightEyeOpenness,
+                    eyeSymmetry,
+                    leftBrowEyeDistance,
+                    rightBrowEyeDistance
+                };
+
+            } catch (error) {
+                console.error('京剧特征提取失败:', error);
+                return null;
+            }
+        }
+
+        /**
+         * 京剧表情评分系统
+         * 基于传统戏曲表演的评判标准
+         */
+        function scoreOperaExpression(metrics, target, role, baseline) {
+            if (!metrics) return { eye: 0, posture: 0, charm: 0, spirit: 0 };
+
+            let scores = {
+                eye: 60,      // 眼神分
+                posture: 60,  // 身段分  
+                charm: 60,    // 韵味分
+                spirit: 60    // 神韵分
+            };
+
+            // 基于不同表情类型的评分
+            switch (target) {
+                case 'shy':
+                    // 娇羞斜视：眼神要含蓄，略有侧视
+                    scores.eye = 50 + metrics.gazeDirection * 30;
+                    scores.charm = 50 + (1 - metrics.eyeExpression) * 50; // 眼神含蓄
+                    break;
+                    
+                case 'sorrow':
+                    // 哀怨凝神：眼神深远，眉眼配合
+                    scores.eye = 40 + metrics.eyeDepth * 60;
+                    scores.spirit = 30 + metrics.browEyeCoordination * 70;
+                    break;
+                    
+                case 'startled':
+                    // 惊恐瞪目：眼睛要张大，表情要夸张
+                    scores.eye = 30 + metrics.eyeExpression * 70;
+                    scores.posture = 40 + metrics.expressionRange * 60;
+                    break;
+                    
+                case 'joy':
+                    // 欣喜流眄：眼神要灵活，有神采
+                    scores.eye = 50 + metrics.eyeExpression * 40;
+                    scores.charm = 50 + metrics.gazeDirection * 25;
+                    break;
+                    
+                case 'anger':
+                    // 嗔怒直视：眼神要直接，威严
+                    scores.eye = 40 + (1 - metrics.gazeDirection / 50) * 60;
+                    scores.spirit = 50 + metrics.browEyeCoordination * 50;
+                    break;
+                    
+                case 'contemplation':
+                    // 沉思垂眸：眼神要内敛，姿态要静
+                    scores.eye = 50 + (1 - metrics.eyeExpression) * 50;
+                    scores.posture = 60 + metrics.postureGrace * 40;
+                    break;
+                    
+                case 'elegant_joy':
+                    // 雅致含笑：眼口配合，优雅含蓄
+                    scores.eye = 50 + metrics.eyeExpression * 30;
+                    scores.charm = 40 + metrics.mouthExpression * 60;
+                    break;
+                    
+                case 'longing':
+                    // 远望凝眸：眼神深远，神情专注
+                    scores.eye = 40 + metrics.eyeDepth * 50;
+                    scores.spirit = 50 + metrics.browEyeCoordination * 50;
+                    break;
+            }
+
+            // 角色特色加权
+            if (role === 'qingyi') {
+                // 青衣要求更加端庄优雅
+                scores.charm *= 1.1;
+                scores.spirit *= 1.1;
+            }
+
+            // 对称性影响所有分数
+            const symmetryBonus = metrics.facialSymmetry * 20;
+            Object.keys(scores).forEach(key => {
+                scores[key] += symmetryBonus;
+                scores[key] = Math.max(0, Math.min(100, Math.round(scores[key])));
+            });
+
+            return scores;
+        }
+
+        /**
+         * 京剧表演指导生成
+         */
+        function generateOperaTips(scores, metrics, target, role) {
+            const tips = [];
+            const isQingyi = role === 'qingyi';
+
+            // 眼神指导
+            if (scores.eye < 70) {
+                switch (target) {
+                    case 'shy':
+                        tips.push("娇羞斜视需要眼神含蓄带怯，目光不要直视，略带羞涩地偏向一侧。");
+                        break;
+                    case 'sorrow':
+                        tips.push("哀怨凝神要求眼神深远，仿佛在凝视远方，眼中含有淡淡愁绪。");
+                        break;
+                    case 'startled':
+                        tips.push("惊恐瞪目需要双眼圆睁，突然张大，表现出被惊吓的神态。");
+                        break;
+                    case 'joy':
+                        tips.push("欣喜流眄要求眼神灵活流转，眼中有神采，表现出内心的喜悦。");
+                        break;
+                    default:
+                        tips.push("眼神是戏曲表演的灵魂，需要根据情感变化调整眼神的深浅和方向。");
+                }
+            }
+
+            // 身段姿态指导
+            if (scores.posture < 70) {
+                if (isQingyi) {
+                    tips.push("青衣身段要求端庄典雅，头部微微上扬，保持贵族女性的威仪。");
+                } else {
+                    tips.push("旦角身段要体现女性的柔美，头部角度要配合眼神表情的变化。");
+                }
+            }
+
+            // 韵味指导
+            if (scores.charm < 70) {
+                tips.push("戏曲表演的韵味来自于眼神与表情的和谐统一，需要多练习眼口配合。");
+            }
+
+            // 神韵指导
+            if (scores.spirit < 70) {
+                tips.push("神韵是戏曲表演的最高境界，要从内心体会角色情感，让表情自然流露。");
+            }
+
+            // 对称性提醒
+            if (metrics.facialSymmetry < 0.8) {
+                tips.push("注意面部表情的对称性，左右眉眼要协调统一，避免表情僵硬。");
+            }
+
+            // 特定表情的专项指导
+            if (target === 'shy' && metrics.gazeDirection < 0.3) {
+                tips.push("娇羞表情的精髓在于'斜视'，要学会用眼角余光表达含蓄的情感。");
+            }
+
+            if (target === 'sorrow' && metrics.browEyeCoordination < 0.7) {
+                tips.push("哀怨表情需要眉眼配合，眉头轻皱，眼神凝重，表现内心的愁苦。");
+            }
+
+            // 鼓励性反馈
+            if (tips.length === 0) {
+                const avgScore = (scores.eye + scores.posture + scores.charm + scores.spirit) / 4;
+                if (avgScore > 85) {
+                    tips.push("出色的表演！已经很好地掌握了京剧旦角的表情韵味，继续保持。");
+                } else {
+                    tips.push("表演不错，继续练习，多体会传统戏曲表演的精髓和内涵。");
+                }
+            }
+
+            return tips.slice(0, 4);
+        }
+
+        // 开始戏曲训练
+        async function startOperaTraining() {
+            if (isTraining) return;
+            
+            const commandId = document.getElementById('operaCommandSelect').value;
+            const command = OPERA_COMMANDS[commandId];
+            
+            if (!command) return;
+            
+            isTraining = true;
+            metricsBuffer = [];
+            
+            // 更新UI
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('currentCommand').textContent = command.name;
+            document.getElementById('operaInstruction').textContent = command.instruction;
+            
+            // TTS播报
+            if (command.tts && 'speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(command.text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 0.9; // 稍慢一点，更符合戏曲节奏
+                speechSynthesis.speak(utterance);
+            }
+            
+            // 倒计时
+            await operaCountdown(3);
+            
+            // 开始记录
+            currentSession = {
+                role: currentRole,
+                command: command,
+                startTime: performance.now()
+            };
+            
+            // 训练计时
+            setTimeout(() => {
+                finishOperaTraining();
+            }, command.duration);
+            
+            // 显示倒计时
+            showOperaCountdown(command.duration);
+        }
+
+        // 戏曲风格倒计时
+        async function operaCountdown(seconds) {
+            const countdownEl = document.getElementById('countdown');
+            
+            for (let i = seconds; i > 0; i--) {
+                countdownEl.textContent = i;
+                countdownEl.style.color = '#8B0000';
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            countdownEl.textContent = '开始！';
+            countdownEl.style.color = '#FFD700';
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // 显示训练倒计时
+        function showOperaCountdown(duration) {
+            const countdownEl = document.getElementById('countdown');
+            const startTime = Date.now();
+            
+            const updateCountdown = () => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, duration - elapsed);
+                const seconds = (remaining / 1000).toFixed(1);
+                
+                countdownEl.textContent = `${seconds}秒`;
+                countdownEl.style.color = '#B8860B';
+                
+                if (remaining > 0) {
+                    requestAnimationFrame(updateCountdown);
+                } else {
+                    countdownEl.textContent = '';
+                }
+            };
+            
+            requestAnimationFrame(updateCountdown);
+        }
+
+        // 完成戏曲训练
+        function finishOperaTraining() {
+            isTraining = false;
+            currentSession.endTime = performance.now();
+            
+            // 分析结果
+            if (metricsBuffer.length > 0) {
+                analyzeOperaSession();
+            }
+            
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        // 分析戏曲训练会话
+        function analyzeOperaSession() {
+            const validMetrics = metricsBuffer.map(item => item.metrics).filter(m => m !== null);
+            if (validMetrics.length === 0) return;
+            
+            const avgMetrics = calculateAverageMetrics(validMetrics);
+            
+            // 戏曲评分
+            const operaScores = scoreOperaExpression(avgMetrics, getCurrentTarget(), currentRole, operaBaseline);
+            
+            // 生成戏曲指导
+            const tips = generateOperaTips(operaScores, avgMetrics, getCurrentTarget(), currentRole);
+            
+            // 更新UI
+            updateOperaScoreDisplay(operaScores);
+            updateTips(tips);
+            showOperaResults(operaScores, avgMetrics);
+        }
+
+        // 计算平均特征
+        function calculateAverageMetrics(metrics) {
+            const avg = {};
+            const keys = Object.keys(metrics[0]);
+            
+            keys.forEach(key => {
+                avg[key] = metrics.reduce((sum, m) => sum + m[key], 0) / metrics.length;
+            });
+            
+            return avg;
+        }
+
+        // 更新戏曲评分显示
+        function updateOperaScoreDisplay(scores) {
+            // 更新四个戏曲评分徽章
+            updateOperaBadge('eyeBadge', 'eyeScore', scores.eye);
+            updateOperaBadge('postureBadge', 'postureScore', scores.posture);
+            updateOperaBadge('charmBadge', 'charmScore', scores.charm);
+            updateOperaBadge('spiritBadge', 'spiritScore', scores.spirit);
+            
+            // 更新总分
+            const totalScore = Math.round((scores.eye + scores.posture + scores.charm + scores.spirit) / 4);
+            document.getElementById('totalScore').textContent = totalScore;
+            document.getElementById('progressFill').style.width = `${totalScore}%`;
+        }
+
+        // 更新单个戏曲徽章
+        function updateOperaBadge(badgeId, scoreId, score) {
+            const badge = document.getElementById(badgeId);
+            const scoreEl = document.getElementById(scoreId);
+            
+            scoreEl.textContent = score;
+            
+            // 清除样式
+            badge.classList.remove('excellent', 'good', 'needs-work');
+            
+            // 根据分数设置样式
+            if (score >= 85) {
+                badge.classList.add('excellent');
+            } else if (score >= 70) {
+                badge.classList.add('good');
+            } else {
+                badge.classList.add('needs-work');
+            }
+        }
+
+        // 更新建议面板
+        function updateTips(tips) {
+            const container = document.getElementById('tipsContainer');
+            container.innerHTML = '';
+            
+            tips.forEach(tip => {
+                const tipEl = document.createElement('div');
+                tipEl.className = 'tip-item';
+                tipEl.textContent = tip;
+                container.appendChild(tipEl);
+            });
+        }
+
+        // 显示戏曲结果
+        function showOperaResults(scores, metrics) {
+            const resultsSection = document.getElementById('resultsSection');
+            resultsSection.classList.add('visible');
+            
+            // 更新标题
+            const commandName = OPERA_COMMANDS[getCurrentCommandId()].name;
+            document.getElementById('resultsTitle').textContent = `${currentRole === 'dan' ? '旦角' : '青衣'} - ${commandName}`;
+            
+            // 更新表情等级标签
+            const avgScore = (scores.eye + scores.posture + scores.charm + scores.spirit) / 4;
+            const levelLabel = document.getElementById('expressionLevel');
+            
+            if (avgScore >= 85) {
+                levelLabel.textContent = '程式精湛';
+                levelLabel.style.background = 'linear-gradient(145deg, rgba(255, 215, 0, 0.4), rgba(184, 134, 11, 0.3))';
+            } else if (avgScore >= 70) {
+                levelLabel.textContent = '程式标准';
+                levelLabel.style.background = 'linear-gradient(145deg, rgba(184, 134, 11, 0.3), rgba(205, 133, 63, 0.2))';
+            } else {
+                levelLabel.textContent = '需要练习';
+                levelLabel.style.background = 'linear-gradient(145deg, rgba(205, 133, 63, 0.3), rgba(160, 82, 45, 0.2))';
+            }
+            
+            // 绘制图表
+            drawOperaRadarChart(scores);
+            drawEyeChart(metrics);
+        }
+
+        // 绘制戏曲雷达图
+        function drawOperaRadarChart(scores) {
+            const canvas = document.getElementById('operaRadarChart');
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = Math.min(centerX, centerY) - 40;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 绘制网格 - 金色风格
+            ctx.strokeStyle = 'rgba(218, 165, 32, 0.3)';
+            ctx.lineWidth = 1;
+            
+            for (let i = 1; i <= 5; i++) {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius * i / 5, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            
+            // 绘制坐标轴和标签
+            const labels = ['眼神', '身段', '韵味', '神韵'];
+            const values = [scores.eye, scores.posture, scores.charm, scores.spirit];
+            
+            ctx.font = 'bold 14px STKaiti, 楷体, serif';
+            ctx.fillStyle = '#8B0000';
+            ctx.textAlign = 'center';
+            
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI * 2) / 4 - Math.PI / 2;
+                const x1 = centerX;
+                const y1 = centerY;
+                const x2 = centerX + Math.cos(angle) * radius;
+                const y2 = centerY + Math.sin(angle) * radius;
+                
+                // 绘制轴线
+                ctx.strokeStyle = 'rgba(139, 0, 0, 0.4)';
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+                
+                // 绘制标签
+                const labelX = centerX + Math.cos(angle) * (radius + 25);
+                const labelY = centerY + Math.sin(angle) * (radius + 25);
+                ctx.fillText(labels[i], labelX, labelY);
+            }
+            
+            // 绘制数据多边形 - 金红渐变
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+            gradient.addColorStop(0, 'rgba(255, 215, 0, 0.6)');
+            gradient.addColorStop(1, 'rgba(139, 0, 0, 0.3)');
+            
+            ctx.fillStyle = gradient;
+            ctx.strokeStyle = '#FFD700';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            
+            for (let i = 0; i < 4; i++) {
+                const angle = (i * Math.PI * 2) / 4 - Math.PI / 2;
+                const value = values[i] / 100;
+                const x = centerX + Math.cos(angle) * radius * value;
+                const y = centerY + Math.sin(angle) * radius * value;
+                
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+                
+                // 绘制数据点
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#B8860B';
+            ctx.stroke();
+        }
+
+        // 绘制眼神技法图表
+        function drawEyeChart(metrics) {
+            const canvas = document.getElementById('eyeChart');
+            const ctx = canvas.getContext('2d');
+            const width = canvas.width;
+            const height = canvas.height;
+            const padding = 40;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            // 眼神相关指标
+            const eyeData = [
+                { label: '眼神表达', value: metrics.eyeExpression * 100, color: '#FFD700' },
+                { label: '眼神方向', value: Math.min(100, metrics.gazeDirection * 2), color: '#DAA520' },
+                { label: '眉眼协调', value: metrics.browEyeCoordination * 100, color: '#B8860B' },
+                { label: '面部对称', value: metrics.facialSymmetry * 100, color: '#CD853F' }
+            ];
+            
+            // 绘制柱状图
+            const barWidth = (width - padding * 2) / eyeData.length - 10;
+            
+            eyeData.forEach((data, i) => {
+                const x = padding + i * (barWidth + 10);
+                const barHeight = (data.value / 100) * (height - padding * 2);
+                const y = height - padding - barHeight;
+                
+                // 绘制柱子 - 渐变效果
+                const gradient = ctx.createLinearGradient(0, y, 0, y + barHeight);
+                gradient.addColorStop(0, data.color);
+                gradient.addColorStop(1, data.color + '80');
+                
+                ctx.fillStyle = gradient;
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                // 绘制边框
+                ctx.strokeStyle = data.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x, y, barWidth, barHeight);
+                
+                // 绘制数值
+                ctx.fillStyle = '#8B0000';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(Math.round(data.value), x + barWidth / 2, y - 5);
+                
+                // 绘制标签
+                ctx.font = '11px STKaiti, 楷体, serif';
+                ctx.fillText(data.label, x + barWidth / 2, height - padding + 15);
+            });
+        }
+
+        // 戏曲个人校准
+        async function operaCalibrate() {
+            if (isCalibrating) return;
+            
+            isCalibrating = true;
+            metricsBuffer = [];
+            
+            document.getElementById('calibrateBtn').disabled = true;
+            document.getElementById('currentCommand').textContent = '戏曲表情个人校准中...';
+            document.getElementById('operaInstruction').textContent = '请保持自然中性表情，建立个人基线';
+            
+            // TTS提示
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance('请保持自然表情两秒钟，进行戏曲表演个人校准');
+                utterance.lang = 'zh-CN';
+                speechSynthesis.speak(utterance);
+            }
+            
+            // 2秒校准时间
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            // 计算戏曲基线
+            if (metricsBuffer.length > 0) {
+                const validMetrics = metricsBuffer.map(item => item.metrics).filter(m => m !== null);
+                if (validMetrics.length > 0) {
+                    operaBaseline = calculateAverageMetrics(validMetrics);
+                    document.getElementById('currentCommand').textContent = '✅ 戏曲表情个人校准完成！';
+                    document.getElementById('operaInstruction').textContent = '现在可以开始京剧旦角表情训练';
+                    
+                    updateTips(['戏曲表情个人校准已完成，后续的眼神、身段、韵味评分将基于您的个人基线，更加准确贴合。']);
+                } else {
+                    document.getElementById('currentCommand').textContent = '❌ 校准失败，未检测到面部';
+                    document.getElementById('operaInstruction').textContent = '请确保摄像头能够清晰捕捉到您的面部';
+                }
+            }
+            
+            isCalibrating = false;
+            document.getElementById('calibrateBtn').disabled = false;
+        }
+
+        // 下一个戏曲表情
+        function nextOperaExpression() {
+            const select = document.getElementById('operaCommandSelect');
+            const options = Array.from(select.options);
+            const currentIndex = options.findIndex(opt => opt.selected);
+            const nextIndex = (currentIndex + 1) % options.length;
+            
+            select.selectedIndex = nextIndex;
+            updateUI();
+            
+            // 隐藏结果区域
+            document.getElementById('resultsSection').classList.remove('visible');
+        }
+
+        // 更新UI状态
+        function updateUI() {
+            const commandId = document.getElementById('operaCommandSelect').value;
+            const command = OPERA_COMMANDS[commandId];
+            
+            if (command) {
+                document.getElementById('currentCommand').textContent = `准备练习：${command.name}`;
+                document.getElementById('operaInstruction').textContent = command.instruction;
+            }
+            
+            // 更新标题显示
+            const roleText = currentRole === 'dan' ? '旦角' : '青衣';
+            document.querySelector('.main-title').textContent = `京剧${roleText}表情训练`;
+        }
+
+        // 辅助函数
+        function getCurrentCommandId() {
+            return document.getElementById('operaCommandSelect').value;
+        }
+
+        function getCurrentTarget() {
+            const commandId = getCurrentCommandId();
+            return OPERA_COMMANDS[commandId] ? OPERA_COMMANDS[commandId].target : 'neutral';
+        }
+    </script>
+</body>
+</html>
