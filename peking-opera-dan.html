@@ -401,11 +401,11 @@
             justify-content: center;
         }
         
-        .demo-image {
+        .demo-canvas {
             width: 100%;
             height: 100%;
-            object-fit: cover;
             border-radius: 12px;
+            cursor: pointer;
         }
         
         .demo-placeholder {
@@ -693,49 +693,438 @@
     </div>
 
     <script>
-        // 京剧表情示范图片配置
-        const OPERA_DEMO_IMAGES = {
+        // 京剧表情AI生成示范配置
+        const OPERA_EXPRESSION_GUIDES = {
             shy_glance: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123456.jpg", // 娇羞斜视示范图
-                fallback: "👩‍🎭", // 女演员emoji作为备用
-                description: "娇羞斜视：眼神轻柔含蓄，略带羞涩地偏向一侧"
+                description: "娇羞斜视：眼神轻柔含蓄，略带羞涩地偏向一侧",
+                drawFunction: drawShyGlanceGuide,
+                colors: ['#FFB6C1', '#FF69B4', '#8B0000'],
+                eyeStyle: 'sidelong',
+                mouthCurve: 'slight_smile'
             },
             sorrowful_gaze: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123457.jpg", // 哀怨凝神示范图
-                fallback: "😭🎭",
-                description: "哀怨凝神：凝神远望，眼中含有淡淡愁绪"
+                description: "哀怨凝神：凝神远望，眼中含有淡淡愁绪",
+                drawFunction: drawSorrowfulGazeGuide,
+                colors: ['#B0C4DE', '#4169E1', '#191970'],
+                eyeStyle: 'deep_gaze',
+                mouthCurve: 'slight_frown'
             },
             startled_eyes: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123458.jpg", // 惊恐瞪目示范图
-                fallback: "😱🎭",
-                description: "惊恐瞪目：双眼圆睁，突然张大，表现惊骇神态"
+                description: "惊恐瞪目：双眼圆睁，突然张大，表现惊骇神态",
+                drawFunction: drawStartledEyesGuide,
+                colors: ['#FFFF00', '#FF6347', '#8B0000'],
+                eyeStyle: 'wide_open',
+                mouthCurve: 'open'
             },
             joyful_flutter: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123459.jpg", // 欣喜流眠示范图
-                fallback: "😊🎭",
-                description: "欣喜流眠：眼神灵活流转，眼中有神采"
+                description: "欣喜流眄：眼神灵活流转，眼中有神采",
+                drawFunction: drawJoyfulFlutterGuide,
+                colors: ['#FFD700', '#FFA500', '#8B0000'],
+                eyeStyle: 'sparkling',
+                mouthCurve: 'wide_smile'
             },
             angry_stare: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345a.jpg", // 嗔怒直视示范图
-                fallback: "😠🎭",
-                description: "嗔怒直视：怒目直视，威严凛然"
+                description: "嗔怒直视：怒目直视，威严凛然",
+                drawFunction: drawAngryStareGuide,
+                colors: ['#DC143C', '#B22222', '#8B0000'],
+                eyeStyle: 'intense_stare',
+                mouthCurve: 'stern'
             },
             thinking_pose: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345b.jpg", // 沉思垂眉示范图
-                fallback: "🤔🎭",
-                description: "沉思垂眉：垂眉沉思，神态安祥"
+                description: "沉思垂眸：垂眸沉思，神态安祥",
+                drawFunction: drawThinkingPoseGuide,
+                colors: ['#DDA0DD', '#9370DB', '#4B0082'],
+                eyeStyle: 'downward',
+                mouthCurve: 'neutral'
             },
             elegant_smile: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345c.jpg", // 雅致含笑示范图
-                fallback: "😌🎭",
-                description: "雅致含笑：浅笑含春，雅致端庄"
+                description: "雅致含笑：浅笑含春，雅致端庄",
+                drawFunction: drawElegantSmileGuide,
+                colors: ['#F0E68C', '#DAA520', '#B8860B'],
+                eyeStyle: 'gentle',
+                mouthCurve: 'elegant_smile'
             },
             distant_gaze: {
-                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345d.jpg", // 远望凝眉示范图
-                fallback: "🕶️🎭",
-                description: "远望凝眉：凝眉远望，思绪悠远"
+                description: "远望凝眸：凝眸远望，思绪悠远",
+                drawFunction: drawDistantGazeGuide,
+                colors: ['#87CEEB', '#4682B4', '#2F4F4F'],
+                eyeStyle: 'distant',
+                mouthCurve: 'contemplative'
             }
         };
+
+        // AI生成京剧表情示范绘制函数
+        function drawOperaFaceBase(ctx, width, height, colors) {
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 创建渐变背景
+            const bgGradient = ctx.createRadialGradient(width/2, height/2, 0, width/2, height/2, width/2);
+            bgGradient.addColorStop(0, 'rgba(255, 248, 220, 0.9)');
+            bgGradient.addColorStop(1, 'rgba(139, 0, 0, 0.1)');
+            ctx.fillStyle = bgGradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // 绘制脸部轮廓
+            ctx.fillStyle = colors[0];
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, width * 0.35, height * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 脸部阴影
+            ctx.fillStyle = 'rgba(139, 0, 0, 0.1)';
+            ctx.beginPath();
+            ctx.ellipse(centerX + width * 0.02, centerY + height * 0.02, width * 0.35, height * 0.4, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            return { centerX, centerY };
+        }
+
+        function drawShyGlanceGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.shy_glance;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 娇羞斜视 - 眼神含蓄，略向侧视
+            
+            // 眉毛 - 略微上扬
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX - width * 0.05, centerY - height * 0.12, centerX + width * 0.05, centerY - height * 0.1);
+            ctx.moveTo(centerX - width * 0.05, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX + width * 0.05, centerY - height * 0.12, centerX + width * 0.15, centerY - height * 0.1);
+            ctx.stroke();
+            
+            // 眼睛 - 斜视，左右不对称
+            ctx.fillStyle = guide.colors[2];
+            // 左眼 (从观察者角度)
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.025, height * 0.015, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            // 右眼 - 更小，表现斜视
+            ctx.beginPath();
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.02, height * 0.012, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 腮红 - 表现羞涩
+            ctx.fillStyle = guide.colors[1] + '40';
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.12, centerY + height * 0.05, width * 0.04, height * 0.025, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.12, centerY + height * 0.05, width * 0.04, height * 0.025, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 嘴唇 - 微笑但含蓄
+            ctx.strokeStyle = guide.colors[1];
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + height * 0.12, width * 0.03, 0.1, Math.PI - 0.1);
+            ctx.stroke();
+        }
+
+        function drawSorrowfulGazeGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.sorrowful_gaze;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 哀怨凝神 - 眼神深远，略带忧愁
+            
+            // 眉毛 - 略微皱起
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.08);
+            ctx.quadraticCurveTo(centerX - width * 0.05, centerY - height * 0.11, centerX + width * 0.05, centerY - height * 0.08);
+            ctx.moveTo(centerX - width * 0.05, centerY - height * 0.08);
+            ctx.quadraticCurveTo(centerX + width * 0.05, centerY - height * 0.11, centerX + width * 0.15, centerY - height * 0.08);
+            ctx.stroke();
+            
+            // 眼睛 - 深邃，略带水汪汪的感觉
+            ctx.fillStyle = guide.colors[2];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.03, height * 0.02, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.03, height * 0.02, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼中的"水光"
+            ctx.fillStyle = guide.colors[0];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.075, centerY - height * 0.055, width * 0.008, height * 0.005, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.085, centerY - height * 0.055, width * 0.008, height * 0.005, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 嘴型 - 略微下撇
+            ctx.strokeStyle = guide.colors[1];
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + height * 0.15, width * 0.03, Math.PI + 0.3, 2 * Math.PI - 0.3);
+            ctx.stroke();
+        }
+
+        function drawStartledEyesGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.startled_eyes;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 惊恐瞪目 - 双眼圆睁
+            
+            // 眉毛 - 高高扬起
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.15);
+            ctx.quadraticCurveTo(centerX - width * 0.05, centerY - height * 0.18, centerX + width * 0.05, centerY - height * 0.15);
+            ctx.moveTo(centerX - width * 0.05, centerY - height * 0.15);
+            ctx.quadraticCurveTo(centerX + width * 0.05, centerY - height * 0.18, centerX + width * 0.15, centerY - height * 0.15);
+            ctx.stroke();
+            
+            // 眼睛 - 非常大，圆睁
+            ctx.fillStyle = 'white';
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.04, height * 0.035, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.04, height * 0.035, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 瞳孔 - 大而黑
+            ctx.fillStyle = guide.colors[2];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.025, height * 0.025, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.025, height * 0.025, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 嘴型 - 张开表示惊讶
+            ctx.fillStyle = guide.colors[2];
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY + height * 0.12, width * 0.02, height * 0.03, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawJoyfulFlutterGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.joyful_flutter;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 欣喜流眄 - 眼神灵活，有神采
+            
+            // 眉毛 - 自然上扬
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX - width * 0.05, centerY - height * 0.13, centerX + width * 0.05, centerY - height * 0.1);
+            ctx.moveTo(centerX - width * 0.05, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX + width * 0.05, centerY - height * 0.13, centerX + width * 0.15, centerY - height * 0.1);
+            ctx.stroke();
+            
+            // 眼睛 - 明亮有神
+            ctx.fillStyle = guide.colors[2];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.03, height * 0.018, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.03, height * 0.018, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼中光芒 - 多个亮点表现神采
+            ctx.fillStyle = guide.colors[0];
+            ctx.beginPath();
+            ctx.arc(centerX - width * 0.075, centerY - height * 0.055, width * 0.005, 0, Math.PI * 2);
+            ctx.arc(centerX - width * 0.085, centerY - height * 0.045, width * 0.003, 0, Math.PI * 2);
+            ctx.arc(centerX + width * 0.075, centerY - height * 0.055, width * 0.005, 0, Math.PI * 2);
+            ctx.arc(centerX + width * 0.085, centerY - height * 0.045, width * 0.003, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 嘴唇 - 愉悦的笑容
+            ctx.strokeStyle = guide.colors[1];
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + height * 0.1, width * 0.05, 0.2, Math.PI - 0.2);
+            ctx.stroke();
+        }
+
+        function drawAngryStareGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.angry_stare;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 嗔怒直视 - 威严凛然
+            
+            // 眉毛 - 严重皱起，呈倒V形
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.08);
+            ctx.lineTo(centerX - width * 0.02, centerY - height * 0.12);
+            ctx.moveTo(centerX + width * 0.02, centerY - height * 0.12);
+            ctx.lineTo(centerX + width * 0.15, centerY - height * 0.08);
+            ctx.stroke();
+            
+            // 眼睛 - 直视，威严
+            ctx.fillStyle = guide.colors[2];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.025, height * 0.02, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.025, height * 0.02, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼中的怒火
+            ctx.fillStyle = guide.colors[0];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.008, height * 0.006, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.008, height * 0.006, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 嘴型 - 严肃，略微下沉
+            ctx.strokeStyle = guide.colors[1];
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.03, centerY + height * 0.12);
+            ctx.lineTo(centerX + width * 0.03, centerY + height * 0.12);
+            ctx.stroke();
+        }
+
+        function drawThinkingPoseGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.thinking_pose;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 沉思垂眸 - 安详宁静
+            
+            // 眉毛 - 自然平直
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.1);
+            ctx.lineTo(centerX - width * 0.05, centerY - height * 0.1);
+            ctx.moveTo(centerX + width * 0.05, centerY - height * 0.1);
+            ctx.lineTo(centerX + width * 0.15, centerY - height * 0.1);
+            ctx.stroke();
+            
+            // 眼睛 - 垂眸，半闭状态
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX - width * 0.08, centerY - height * 0.03, width * 0.02, 0, Math.PI);
+            ctx.arc(centerX + width * 0.08, centerY - height * 0.03, width * 0.02, 0, Math.PI);
+            ctx.stroke();
+            
+            // 眼睑 - 表现垂眸
+            ctx.fillStyle = guide.colors[1] + '60';
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.04, width * 0.02, height * 0.008, 0, 0, Math.PI);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.04, width * 0.02, height * 0.008, 0, 0, Math.PI);
+            ctx.fill();
+            
+            // 嘴型 - 中性，安详
+            ctx.strokeStyle = guide.colors[1];
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.02, centerY + height * 0.12);
+            ctx.lineTo(centerX + width * 0.02, centerY + height * 0.12);
+            ctx.stroke();
+        }
+
+        function drawElegantSmileGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.elegant_smile;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 雅致含笑 - 端庄优雅
+            
+            // 眉毛 - 优雅弧形
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX - width * 0.05, centerY - height * 0.13, centerX + width * 0.05, centerY - height * 0.1);
+            ctx.moveTo(centerX - width * 0.05, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX + width * 0.05, centerY - height * 0.13, centerX + width * 0.15, centerY - height * 0.1);
+            ctx.stroke();
+            
+            // 眼睛 - 温和含笑
+            ctx.fillStyle = guide.colors[2];
+            ctx.beginPath();
+            ctx.arc(centerX - width * 0.08, centerY - height * 0.05, width * 0.02, 0.1, Math.PI - 0.1);
+            ctx.arc(centerX + width * 0.08, centerY - height * 0.05, width * 0.02, 0.1, Math.PI - 0.1);
+            ctx.fill();
+            
+            // 眼中温和的光
+            ctx.fillStyle = guide.colors[0];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.055, width * 0.006, height * 0.004, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.055, width * 0.006, height * 0.004, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 嘴唇 - 优雅的浅笑
+            ctx.strokeStyle = guide.colors[1];
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY + height * 0.11, width * 0.04, 0.15, Math.PI - 0.15);
+            ctx.stroke();
+            
+            // 嘴角的细致处理
+            ctx.fillStyle = guide.colors[1] + '40';
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.035, centerY + height * 0.115, width * 0.005, height * 0.003, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.035, centerY + height * 0.115, width * 0.005, height * 0.003, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawDistantGazeGuide(canvas) {
+            const ctx = canvas.getContext('2d');
+            const { width, height } = canvas;
+            const guide = OPERA_EXPRESSION_GUIDES.distant_gaze;
+            const { centerX, centerY } = drawOperaFaceBase(ctx, width, height, guide.colors);
+            
+            // 远望凝眸 - 深情远望
+            
+            // 眉毛 - 略微上扬，表现深情
+            ctx.strokeStyle = guide.colors[2];
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.15, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX - width * 0.05, centerY - height * 0.12, centerX + width * 0.05, centerY - height * 0.1);
+            ctx.moveTo(centerX - width * 0.05, centerY - height * 0.1);
+            ctx.quadraticCurveTo(centerX + width * 0.05, centerY - height * 0.12, centerX + width * 0.15, centerY - height * 0.1);
+            ctx.stroke();
+            
+            // 眼睛 - 深邃，凝视远方
+            ctx.fillStyle = guide.colors[2];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.028, height * 0.02, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.028, height * 0.02, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 瞳孔中的深情 - 层次感
+            ctx.fillStyle = guide.colors[1];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.08, centerY - height * 0.05, width * 0.015, height * 0.012, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.08, centerY - height * 0.05, width * 0.015, height * 0.012, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 眼中的光点 - 表现凝神
+            ctx.fillStyle = guide.colors[0];
+            ctx.beginPath();
+            ctx.ellipse(centerX - width * 0.075, centerY - height * 0.055, width * 0.006, height * 0.004, 0, 0, Math.PI * 2);
+            ctx.ellipse(centerX + width * 0.085, centerY - height * 0.055, width * 0.006, height * 0.004, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // 嘴型 - 微抿，表现思绪深远
+            ctx.strokeStyle = guide.colors[1];
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(centerX - width * 0.025, centerY + height * 0.12);
+            ctx.quadraticCurveTo(centerX, centerY + height * 0.115, centerX + width * 0.025, centerY + height * 0.12);
+            ctx.stroke();
+        }
         
         // 京剧旦角表情训练口令配置
         const OPERA_COMMANDS = {
@@ -1800,54 +2189,69 @@
             document.querySelector('.main-title').textContent = `京剧${roleText}表情训练`;
         }
         
-        // 更新表情示范
+        // 更新表情示范 - 使用AI生成的Canvas绘制
         function updateExpressionDemo(commandId) {
-            const demoData = OPERA_DEMO_IMAGES[commandId];
+            const guideData = OPERA_EXPRESSION_GUIDES[commandId];
             const command = OPERA_COMMANDS[commandId];
             
-            if (!demoData || !command) return;
+            if (!guideData || !command) return;
             
             // 更新表情名称和描述
             document.getElementById('demoExpressionName').textContent = command.name;
-            document.getElementById('demoExpressionDesc').textContent = demoData.description;
+            document.getElementById('demoExpressionDesc').textContent = guideData.description;
             
-            // 更新图片
+            // 更新Canvas示范
             const imageFrame = document.getElementById('demoImageFrame');
-            const placeholder = document.getElementById('demoPlaceholder');
             
             // 清空当前内容
             imageFrame.innerHTML = '';
             
-            // 创建图片元素
-            const img = document.createElement('img');
-            img.className = 'demo-image';
-            img.alt = `${command.name}示范`;
-            img.style.display = 'none'; // 初始隐藏
+            // 创建Canvas元素
+            const canvas = document.createElement('canvas');
+            canvas.className = 'demo-canvas';
+            canvas.width = 200;
+            canvas.height = 200;
+            canvas.alt = `${command.name}AI示范`;
             
-            // 图片加载成功
-            img.onload = () => {
-                img.style.display = 'block';
-                // 添加动画效果
-                img.style.opacity = '0';
-                img.style.transition = 'opacity 0.5s ease';
+            // 添加到DOM
+            imageFrame.appendChild(canvas);
+            
+            // 绘制表情示范
+            try {
+                guideData.drawFunction(canvas);
+                
+                // 添加淡入动画效果
+                canvas.style.opacity = '0';
+                canvas.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => {
-                    img.style.opacity = '1';
+                    canvas.style.opacity = '1';
                 }, 100);
-            };
-            
-            // 图片加载失败，显示备用内容
-            img.onerror = () => {
+                
+                // 添加点击交互效果
+                canvas.addEventListener('click', () => {
+                    // 重新绘制，添加一些动态效果
+                    const ctx = canvas.getContext('2d');
+                    ctx.save();
+                    ctx.globalAlpha = 0.3;
+                    guideData.drawFunction(canvas);
+                    ctx.restore();
+                    
+                    setTimeout(() => {
+                        guideData.drawFunction(canvas);
+                    }, 200);
+                });
+                
+            } catch (error) {
+                console.error('绘制表情示范失败:', error);
+                // 降级处理：显示文字提示
                 imageFrame.innerHTML = `
                     <div class="demo-placeholder">
-                        <div style="font-size: 64px;">${demoData.fallback}</div>
+                        <div style="font-size: 48px;">🎭</div>
                         <div class="demo-placeholder-text">${command.name}</div>
+                        <div style="font-size: 12px; margin-top: 5px;">AI示范加载中...</div>
                     </div>
                 `;
-            };
-            
-            // 设置图片源并添加到DOM
-            img.src = demoData.image;
-            imageFrame.appendChild(img);
+            }
         }
 
         // 辅助函数
