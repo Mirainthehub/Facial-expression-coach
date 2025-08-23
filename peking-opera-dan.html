@@ -61,11 +61,11 @@
         .app-container {
             display: grid;
             grid-template-areas: 
-                "header header header"
-                "sidebar main tips"
-                "results results results";
+                "header header header header"
+                "sidebar main guide tips"
+                "results results results results";
             grid-template-rows: auto 1fr auto;
-            grid-template-columns: 320px 1fr 360px;
+            grid-template-columns: 300px 1fr 280px 320px;
             height: 100vh;
             padding: 20px;
             gap: 20px;
@@ -361,6 +361,85 @@
             margin: 10px 0;
         }
         
+        /* Expression Guide Panel - 表情示范 */
+        .guide-panel {
+            grid-area: guide;
+            padding: 20px;
+        }
+        
+        .guide-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8B0000;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+        }
+        
+        .expression-demo-container {
+            background: linear-gradient(145deg, rgba(0, 0, 0, 0.1), rgba(139, 0, 0, 0.05));
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            text-align: center;
+        }
+        
+        .demo-image-frame {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 15px;
+            border: 3px solid #B8860B;
+            border-radius: 15px;
+            overflow: hidden;
+            background: linear-gradient(145deg, rgba(255, 245, 238, 0.3), rgba(240, 230, 140, 0.2));
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .demo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 12px;
+        }
+        
+        .demo-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #B8860B;
+            font-size: 48px;
+            background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), rgba(184, 134, 11, 0.1));
+        }
+        
+        .demo-placeholder-text {
+            font-size: 12px;
+            margin-top: 8px;
+            color: #8B0000;
+        }
+        
+        .expression-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #8B0000;
+            margin-bottom: 8px;
+        }
+        
+        .expression-description {
+            font-size: 13px;
+            color: #B8860B;
+            line-height: 1.4;
+            font-style: italic;
+        }
+        
         /* Tips Panel - 戏曲指导 */
         .tips-panel {
             grid-area: tips;
@@ -444,12 +523,25 @@
         }
         
         /* Responsive */
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
+            .app-container {
+                grid-template-areas: 
+                    "header header"
+                    "sidebar main"
+                    "guide tips"
+                    "results results";
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto 1fr auto auto;
+            }
+        }
+        
+        @media (max-width: 1000px) {
             .app-container {
                 grid-template-areas: 
                     "header"
                     "sidebar"
                     "main"
+                    "guide"
                     "tips"
                     "results";
                 grid-template-columns: 1fr;
@@ -549,6 +641,26 @@
             </div>
         </div>
         
+        <!-- Expression Guide Panel -->
+        <div class="card guide-panel">
+            <div class="guide-title">
+                <span>🖼️</span>
+                <span>表情示范</span>
+            </div>
+            
+            <div class="expression-demo-container" id="expressionDemo">
+                <div class="demo-image-frame" id="demoImageFrame">
+                    <div class="demo-placeholder" id="demoPlaceholder">
+                        <div>🎭</div>
+                        <div class="demo-placeholder-text">选择表情查看示范</div>
+                    </div>
+                </div>
+                
+                <div class="expression-name" id="demoExpressionName">京剧旦角表惃</div>
+                <div class="expression-description" id="demoExpressionDesc">选择上方表情类型，查看传统戏曲表情示范</div>
+            </div>
+        </div>
+        
         <!-- Tips Panel -->
         <div class="card tips-panel">
             <div class="tips-title">
@@ -581,6 +693,50 @@
     </div>
 
     <script>
+        // 京剧表情示范图片配置
+        const OPERA_DEMO_IMAGES = {
+            shy_glance: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123456.jpg", // 娇羞斜视示范图
+                fallback: "👩‍🎭", // 女演员emoji作为备用
+                description: "娇羞斜视：眼神轻柔含蓄，略带羞涩地偏向一侧"
+            },
+            sorrowful_gaze: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123457.jpg", // 哀怨凝神示范图
+                fallback: "😭🎭",
+                description: "哀怨凝神：凝神远望，眼中含有淡淡愁绪"
+            },
+            startled_eyes: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123458.jpg", // 惊恐瞪目示范图
+                fallback: "😱🎭",
+                description: "惊恐瞪目：双眼圆睁，突然张大，表现惊骇神态"
+            },
+            joyful_flutter: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc123459.jpg", // 欣喜流眠示范图
+                fallback: "😊🎭",
+                description: "欣喜流眠：眼神灵活流转，眼中有神采"
+            },
+            angry_stare: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345a.jpg", // 嗔怒直视示范图
+                fallback: "😠🎭",
+                description: "嗔怒直视：怒目直视，威严凛然"
+            },
+            thinking_pose: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345b.jpg", // 沉思垂眉示范图
+                fallback: "🤔🎭",
+                description: "沉思垂眉：垂眉沉思，神态安祥"
+            },
+            elegant_smile: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345c.jpg", // 雅致含笑示范图
+                fallback: "😌🎭",
+                description: "雅致含笑：浅笑含春，雅致端庄"
+            },
+            distant_gaze: {
+                image: "https://pic.imgdb.cn/item/647f8c981ddac507cc12345d.jpg", // 远望凝眉示范图
+                fallback: "🕶️🎭",
+                description: "远望凝眉：凝眉远望，思绪悠远"
+            }
+        };
+        
         // 京剧旦角表情训练口令配置
         const OPERA_COMMANDS = {
             shy_glance: {
@@ -1634,11 +1790,64 @@
             if (command) {
                 document.getElementById('currentCommand').textContent = `准备练习：${command.name}`;
                 document.getElementById('operaInstruction').textContent = command.instruction;
+                
+                // 更新表情示范图片
+                updateExpressionDemo(commandId);
             }
             
             // 更新标题显示
             const roleText = currentRole === 'dan' ? '旦角' : '青衣';
             document.querySelector('.main-title').textContent = `京剧${roleText}表情训练`;
+        }
+        
+        // 更新表情示范
+        function updateExpressionDemo(commandId) {
+            const demoData = OPERA_DEMO_IMAGES[commandId];
+            const command = OPERA_COMMANDS[commandId];
+            
+            if (!demoData || !command) return;
+            
+            // 更新表情名称和描述
+            document.getElementById('demoExpressionName').textContent = command.name;
+            document.getElementById('demoExpressionDesc').textContent = demoData.description;
+            
+            // 更新图片
+            const imageFrame = document.getElementById('demoImageFrame');
+            const placeholder = document.getElementById('demoPlaceholder');
+            
+            // 清空当前内容
+            imageFrame.innerHTML = '';
+            
+            // 创建图片元素
+            const img = document.createElement('img');
+            img.className = 'demo-image';
+            img.alt = `${command.name}示范`;
+            img.style.display = 'none'; // 初始隐藏
+            
+            // 图片加载成功
+            img.onload = () => {
+                img.style.display = 'block';
+                // 添加动画效果
+                img.style.opacity = '0';
+                img.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => {
+                    img.style.opacity = '1';
+                }, 100);
+            };
+            
+            // 图片加载失败，显示备用内容
+            img.onerror = () => {
+                imageFrame.innerHTML = `
+                    <div class="demo-placeholder">
+                        <div style="font-size: 64px;">${demoData.fallback}</div>
+                        <div class="demo-placeholder-text">${command.name}</div>
+                    </div>
+                `;
+            };
+            
+            // 设置图片源并添加到DOM
+            img.src = demoData.image;
+            imageFrame.appendChild(img);
         }
 
         // 辅助函数
