@@ -33,6 +33,8 @@
 ### 在线体验
 - **中文版**: [Live Demo](https://mirainthehub.github.io/Facial-expression-coach/) 立即开始训练
 - **English**: [English Version](https://mirainthehub.github.io/Facial-expression-coach/index-en.html) Start training now
+- **专业版表情训练**: [Expression Coach Pro](https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro.html)
+- **京剧旦角训练**: [Peking Opera Dan Coach](https://mirainthehub.github.io/Facial-expression-coach/peking-opera-dan.html)
 
 ### 本地运行
 1. 克隆项目
