@@ -1031,6 +1031,14 @@
                     </div>
                 </div>
                 
+                <!-- Make & Share Short Video Button -->
+                <div style="text-align: center; margin: 2rem 0;">
+                    <button id="makeShareVideoBtn" class="btn btn-gradient" style="font-size: 1.1rem; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 25px; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 8px;">
+                        <span>🎬</span>
+                        <span>Make & Share Short Video</span>
+                    </button>
+                </div>
+                
                 <div class="feedback-section">
                     <div class="feedback-title">💡 Professional Coaching Tips</div>
                     <div id="feedbackContainer">
@@ -2069,6 +2077,101 @@
             }
         }
         
+        // === Recording state ===
+        let recorder, recordedChunks = [];
+        let mixedStream;
+
+        // 如果需要采集麦克风，请将此项设为 true（默认 false 仅录画面）
+        const ENABLE_MIC = false;
+
+        // 用美颜后的画布作为视频源（与页面一致：#beautifiedCanvas3）
+        function getCanvasStream() {
+            const canvas = document.getElementById('beautifiedCanvas3');
+            // 30fps 可按需调整
+            return canvas.captureStream(30);
+        }
+
+        async function startRecording() {
+            // 画面流
+            const canvasStream = getCanvasStream();
+
+            // 可选：合并麦克风音频（移动端需要 HTTPS+手势触发）
+            if (ENABLE_MIC) {
+                const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mixedStream = new MediaStream([
+                    ...canvasStream.getVideoTracks(),
+                    ...mic.getAudioTracks()
+                ]);
+            } else {
+                mixedStream = canvasStream;
+            }
+
+            recordedChunks = [];
+            recorder = new MediaRecorder(mixedStream, { mimeType: 'video/webm; codecs=vp9,opus' });
+            recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
+            recorder.onstop = async () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                // 存到 sessionStorage，供下一页读取
+                const b64 = await blobToBase64(blob);
+                sessionStorage.setItem('lastTrainingVideo_b64', b64);
+                // 跳转到预览+分享页
+                window.location.href = 'video-share.html';
+            };
+            recorder.start();
+        }
+
+        function stopRecordingAndGo() {
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
+            } else {
+                // 兜底：没有录到就提示
+                alert('No video recorded — please try training again.');
+            }
+        }
+
+        function blobToBase64(blob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob); // data:URL(base64)
+            });
+        }
+
+        // === 将录制与"训练开始/结束"绑定 ===
+        // 当用户点击"Start"开始某个表情训练时开始录制；当训练序列全部完成进入 results 时停止录制。
+        // 如果你的代码里已有训练状态机，请在合适的起止钩子里调用：startRecording() / stopRecordingAndGo()。
+        // 暂时提供最小实现：当点击开始训练按钮时开启；当显示结果页（#resultsStep）时停止。
+        (function wireRecording() {
+            // 开始按钮（英文页 id='startTrainingBtn'；中文页一致或名为"开始"按钮）：
+            const startBtn = document.getElementById('startTrainingBtn');
+            if (startBtn) {
+                startBtn.addEventListener('click', () => {
+                    // 防多次启动
+                    if (!recorder || recorder.state === 'inactive') {
+                        startRecording();
+                    }
+                }, { once: false });
+            }
+
+            // 监听进入结果页（#resultsStep 被激活时）
+            const resultsStep = document.getElementById('resultsStep');
+            const observer = new MutationObserver(() => {
+                if (resultsStep.classList.contains('active')) {
+                    stopRecordingAndGo();
+                }
+            });
+            if (resultsStep) observer.observe(resultsStep, { attributes: true, attributeFilter: ['class'] });
+
+            // 分享视频按钮事件
+            const shareBtn = document.getElementById('makeShareVideoBtn');
+            if (shareBtn) {
+                shareBtn.addEventListener('click', () => {
+                    // 若录制已结束会直接跳转；若仍在录制则先停止再跳转
+                    stopRecordingAndGo();
+                });
+            }
+        })();
+
         // Initialization
         document.addEventListener('DOMContentLoaded', () => {
             updateStatus('Welcome to Expression Training Coach', 'ready');

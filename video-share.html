@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分享训练视频 - 面部表情教练</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(45deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .video-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 2rem auto;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #000;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-player {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 16px;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .video-overlay.playing {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .play-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 2rem;
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .video-info {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .video-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .actions-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .actions-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #e0e7ff;
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .action-btn {
+            padding: 1rem 1.5rem;
+            border-radius: 16px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .action-btn:hover:before {
+            left: 100%;
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+        }
+
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(78, 205, 196, 0.4);
+        }
+
+        .btn-share {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+        }
+
+        .btn-share:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+        }
+
+        .btn-wechat {
+            background: linear-gradient(135deg, #07c160 0%, #06b056 100%);
+            box-shadow: 0 4px 15px rgba(7, 193, 96, 0.3);
+        }
+
+        .btn-wechat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(7, 193, 96, 0.4);
+        }
+
+        .btn-back {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 1rem;
+            background: rgba(78, 205, 196, 0.2);
+            border-radius: 12px;
+            border: 1px solid rgba(78, 205, 196, 0.3);
+            margin-top: 1rem;
+        }
+
+        .qr-section {
+            display: none;
+            text-align: center;
+            margin-top: 2rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+        }
+
+        .qr-code {
+            width: 200px;
+            height: 200px;
+            background: white;
+            margin: 1rem auto;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .video-section {
+                padding: 1.5rem;
+            }
+
+            .btn-group {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+            }
+
+            .video-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* 动画效果 */
+        .fade-in {
+            animation: fadeIn 0.6s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container fade-in">
+        <div class="header">
+            <h1>🎬 训练视频已生成</h1>
+            <p>您的面部表情训练精彩瞬间已录制完成</p>
+        </div>
+
+        <div class="video-section">
+            <div class="video-container">
+                <video id="recordedVideo" class="video-player" muted>
+                    <source src="" type="video/webm">
+                    您的浏览器不支持视频播放。
+                </video>
+                <div class="video-overlay" id="videoOverlay">
+                    <div class="play-button">▶️</div>
+                </div>
+            </div>
+
+            <div class="video-info">
+                <h3 style="margin-bottom: 1rem; color: #e0e7ff;">训练记录</h3>
+                <div class="video-stats">
+                    <div class="stat-item">
+                        <div class="stat-value" id="durationValue">--</div>
+                        <div class="stat-label">时长</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="sizeValue">--</div>
+                        <div class="stat-label">大小</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="qualityValue">高清</div>
+                        <div class="stat-label">质量</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="modeValue">--</div>
+                        <div class="stat-label">模式</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions-section">
+            <h3 class="actions-title">📱 分享您的成果</h3>
+            
+            <div class="btn-group">
+                <button class="action-btn btn-download" id="downloadBtn">
+                    <span>📥</span>
+                    <span>下载视频</span>
+                </button>
+                
+                <button class="action-btn btn-share" id="shareBtn">
+                    <span>🔗</span>
+                    <span>一键分享</span>
+                </button>
+                
+                <button class="action-btn btn-wechat" id="wechatBtn">
+                    <span>💬</span>
+                    <span>微信分享</span>
+                </button>
+                
+                <a href="javascript:history.back()" class="action-btn btn-back">
+                    <span>🔙</span>
+                    <span>返回训练</span>
+                </a>
+            </div>
+
+            <div class="loading" id="loadingSection">
+                <div class="spinner"></div>
+                <p>正在处理...</p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <span>✅</span>
+                <span>操作成功完成！</span>
+            </div>
+
+            <div class="qr-section" id="qrSection">
+                <h4 style="margin-bottom: 1rem;">微信扫码分享</h4>
+                <div class="qr-code" id="qrCode">
+                    二维码将在这里显示
+                </div>
+                <p style="opacity: 0.8; font-size: 0.9rem;">使用微信扫描二维码分享到朋友圈</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let videoBlob = null;
+        let videoUrl = null;
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadVideoFromStorage();
+            setupEventListeners();
+        });
+
+        // 从 sessionStorage 加载视频数据
+        function loadVideoFromStorage() {
+            try {
+                const videoData = sessionStorage.getItem('recordedVideoBlob');
+                const trainingData = JSON.parse(sessionStorage.getItem('trainingData') || '{}');
+                
+                if (videoData) {
+                    // 将 Base64 转换回 Blob
+                    const byteCharacters = atob(videoData);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    videoBlob = new Blob([byteArray], { type: 'video/webm' });
+                    
+                    // 创建视频 URL 并设置到 video 元素
+                    videoUrl = URL.createObjectURL(videoBlob);
+                    const videoElement = document.getElementById('recordedVideo');
+                    videoElement.src = videoUrl;
+                    
+                    // 更新视频信息
+                    updateVideoStats(videoBlob, trainingData);
+                } else {
+                    // 没有视频数据，显示错误
+                    showError('未找到录制的视频数据');
+                }
+            } catch (error) {
+                console.error('加载视频数据失败:', error);
+                showError('视频数据加载失败');
+            }
+        }
+
+        // 更新视频统计信息
+        function updateVideoStats(blob, trainingData) {
+            // 文件大小
+            const sizeInMB = (blob.size / (1024 * 1024)).toFixed(2);
+            document.getElementById('sizeValue').textContent = sizeInMB + ' MB';
+            
+            // 训练模式
+            const mode = trainingData.mode || '未知模式';
+            document.getElementById('modeValue').textContent = mode === 'film' ? '电影特写' : (mode === 'stage' ? '舞台表演' : mode);
+            
+            // 当视频元数据加载后更新时长
+            const videoElement = document.getElementById('recordedVideo');
+            videoElement.addEventListener('loadedmetadata', function() {
+                const duration = Math.round(videoElement.duration);
+                const minutes = Math.floor(duration / 60);
+                const seconds = duration % 60;
+                document.getElementById('durationValue').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            });
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 视频播放控制
+            const videoElement = document.getElementById('recordedVideo');
+            const overlay = document.getElementById('videoOverlay');
+            
+            overlay.addEventListener('click', function() {
+                videoElement.play();
+                overlay.classList.add('playing');
+            });
+            
+            videoElement.addEventListener('pause', function() {
+                overlay.classList.remove('playing');
+            });
+            
+            videoElement.addEventListener('ended', function() {
+                overlay.classList.remove('playing');
+            });
+            
+            // 下载按钮
+            document.getElementById('downloadBtn').addEventListener('click', downloadVideo);
+            
+            // 分享按钮
+            document.getElementById('shareBtn').addEventListener('click', shareVideo);
+            
+            // 微信分享按钮
+            document.getElementById('wechatBtn').addEventListener('click', shareToWechat);
+        }
+
+        // 下载视频
+        function downloadVideo() {
+            if (!videoBlob) {
+                showError('没有可下载的视频');
+                return;
+            }
+            
+            showLoading();
+            
+            setTimeout(() => {
+                try {
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
+                    const filename = `facial_expression_training_${timestamp}.webm`;
+                    
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = videoUrl;
+                    downloadLink.download = filename;
+                    downloadLink.style.display = 'none';
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    hideLoading();
+                    showSuccess('视频下载成功！');
+                } catch (error) {
+                    console.error('下载失败:', error);
+                    hideLoading();
+                    showError('下载失败，请重试');
+                }
+            }, 1000);
+        }
+
+        // 一键分享
+        async function shareVideo() {
+            if (!videoBlob) {
+                showError('没有可分享的视频');
+                return;
+            }
+            
+            // 检查是否支持 Web Share API
+            if (navigator.share && navigator.canShare) {
+                try {
+                    showLoading();
+                    
+                    // 创建文件对象
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
+                    const filename = `facial_expression_training_${timestamp}.webm`;
+                    const file = new File([videoBlob], filename, { type: 'video/webm' });
+                    
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            title: '我的面部表情训练视频',
+                            text: '看看我的面部表情训练成果！',
+                            files: [file]
+                        });
+                        
+                        hideLoading();
+                        showSuccess('分享成功！');
+                    } else {
+                        // 降级到链接分享
+                        await navigator.share({
+                            title: '我的面部表情训练视频',
+                            text: '看看我的面部表情训练成果！',
+                            url: window.location.href
+                        });
+                        
+                        hideLoading();
+                        showSuccess('分享链接已复制！');
+                    }
+                } catch (error) {
+                    hideLoading();
+                    if (error.name !== 'AbortError') {
+                        console.error('分享失败:', error);
+                        copyToClipboard();
+                    }
+                }
+            } else {
+                // 不支持 Web Share API，复制链接到剪贴板
+                copyToClipboard();
+            }
+        }
+
+        // 复制链接到剪贴板
+        async function copyToClipboard() {
+            try {
+                const shareText = `🎭 看看我的面部表情训练成果！\n\n通过面部表情教练应用，我已经掌握了专业的表情技巧。快来一起训练吧！\n\n${window.location.origin}`;
+                
+                await navigator.clipboard.writeText(shareText);
+                showSuccess('分享文案已复制到剪贴板！');
+            } catch (error) {
+                console.error('复制失败:', error);
+                showError('复制失败，请手动复制链接');
+            }
+        }
+
+        // 微信分享
+        function shareToWechat() {
+            showLoading();
+            
+            setTimeout(() => {
+                hideLoading();
+                
+                // 显示二维码区域
+                const qrSection = document.getElementById('qrSection');
+                qrSection.style.display = 'block';
+                
+                // 生成分享二维码（这里使用模拟的二维码，实际项目中应该使用真实的二维码生成服务）
+                generateQRCode();
+                
+                // 平滑滚动到二维码区域
+                qrSection.scrollIntoView({ behavior: 'smooth' });
+            }, 1500);
+        }
+
+        // 生成二维码（模拟）
+        function generateQRCode() {
+            const qrCode = document.getElementById('qrCode');
+            
+            // 实际项目中，这里应该调用二维码生成API
+            // 例如：qrcode.js 库或服务器端API
+            qrCode.innerHTML = `
+                <div style="font-size: 12px; color: #666; line-height: 1.4;">
+                    <div style="margin-bottom: 8px;">📱 微信分享</div>
+                    <div style="font-size: 10px;">扫描此码分享视频</div>
+                    <div style="margin-top: 8px; font-size: 8px; opacity: 0.7;">
+                        ${window.location.origin}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('loadingSection').style.display = 'block';
+        }
+
+        // 隐藏加载状态
+        function hideLoading() {
+            document.getElementById('loadingSection').style.display = 'none';
+        }
+
+        // 显示成功消息
+        function showSuccess(message) {
+            const successElement = document.getElementById('successMessage');
+            successElement.querySelector('span:last-child').textContent = message;
+            successElement.style.display = 'block';
+            
+            setTimeout(() => {
+                successElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            alert('❌ ' + message);
+        }
+
+        // 页面卸载时清理资源
+        window.addEventListener('beforeunload', function() {
+            if (videoUrl) {
+                URL.revokeObjectURL(videoUrl);
+            }
+        });
+    </script>
+</body>
+</html>
