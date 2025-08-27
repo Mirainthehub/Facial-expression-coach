@@ -599,6 +599,19 @@
             margin-top: 30px;
         }
         
+        /* 生成视频按钮特殊样式 */
+        #makeShareVideoBtn {
+            background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+            font-size: 18px;
+            padding: 18px 35px;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+        }
+        
+        #makeShareVideoBtn:hover {
+            background: linear-gradient(45deg, #ff5252, #ff7979);
+            box-shadow: 0 6px 25px rgba(255, 107, 107, 0.4);
+        }
+        
         /* 动画和效果 */
         .celebration {
             position: fixed;
@@ -1058,11 +1071,12 @@
                 </div>
                 
                 <div class="btn-group">
-                    <button class="btn btn-primary" id="makeShareVideoBtn">生成短视频并分享</button>
+                    <button class="btn btn-primary" id="makeShareVideoBtn">🎥 生成分享视频</button>
                 </div>
+                
                 <div class="btn-group">
-                    <button class="btn btn-secondary" onclick="restartTraining()">重新训练</button>
-                    <button class="btn btn-primary" onclick="continueTraining()">继续练习</button>
+                    <button class="btn btn-secondary" onclick="restartTraining()">🔄 重新训练</button>
+                    <button class="btn btn-primary" onclick="continueTraining()">➕ 继续练习</button>
                 </div>
             </div>
         </div>
@@ -1300,9 +1314,10 @@
 
             camera = new Camera(document.getElementById('videoElement'), {
                 onFrame: async () => {
-                    const currentCanvas = getCurrentProcessedCanvas();
-                    if (currentCanvas && currentCanvas.width > 0) {
-                        await faceMesh.send({image: currentCanvas});
+                    // 使用当前活跃的视频元素
+                    const currentVideo = getCurrentVideo();
+                    if (currentVideo && currentVideo.videoWidth > 0) {
+                        await faceMesh.send({image: currentVideo});
                     }
                 },
                 width: 640,
@@ -1316,6 +1331,9 @@
             const activeStep = document.querySelector('.step-container.active');
             if (activeStep) {
                 const video = activeStep.querySelector('video');
+                if (isCalibrating && video) {
+                    console.log('校准中获取视频元素:', video.id, 'from step:', activeStep.id);
+                }
                 return video;
             }
             return document.getElementById('videoElement');
@@ -1325,6 +1343,9 @@
             const activeStep = document.querySelector('.step-container.active');
             if (activeStep) {
                 const canvas = activeStep.querySelector('[id*="beautifiedCanvas"]');
+                if (isCalibrating) {
+                    console.log('校准中获取canvas:', canvas ? canvas.id : 'null', 'activeStep:', activeStep.id);
+                }
                 return canvas;
             }
             return document.getElementById('beautifiedCanvas');
@@ -1373,14 +1394,21 @@
                     });
                     
                     // 调试信息
-                    if (isCalibrating && metricsBuffer.length % 10 === 0) {
-                        console.log(`校准进行中，已收集 ${metricsBuffer.length} 个数据点`);
+                    if (isCalibrating && metricsBuffer.length % 5 === 0) {
+                        console.log(`校准进行中，已收集 ${metricsBuffer.length} 个数据点`, metrics);
                     }
+                } else if (isCalibrating) {
+                    // 调试：如果在校准但没有收集到数据
+                    console.log('校准中但未收集到有效数据，metrics:', metrics);
                 }
                 
                 // 更新视频状态
                 updateVideoStatus(true);
             } else {
+                // 调试：校准期间未检测到面部
+                if (isCalibrating) {
+                    console.log('校准中未检测到面部landmarks');
+                }
                 updateVideoStatus(false);
             }
         }
@@ -1485,28 +1513,11 @@
             // 校准页面视频设置
             document.getElementById('calibrationInstructions').textContent = '保持放松的中性表情，不要微笑或皱眉';
             
-            // 确保摄像头已初始化并为校准页面设置
-            if (camera) {
-                // 更新相机以使用校准页面的视频元素
-                const calibrationVideo = document.getElementById('videoElement2');
-                if (calibrationVideo && calibrationVideo.srcObject) {
-                    // 视频流已存在，更新相机配置
-                    camera = new Camera(calibrationVideo, {
-                        onFrame: async () => {
-                            const currentCanvas = getCurrentProcessedCanvas();
-                            if (currentCanvas && currentCanvas.width > 0) {
-                                await faceMesh.send({image: currentCanvas});
-                            }
-                        },
-                        width: 640,
-                        height: 480
-                    });
-                    camera.start();
-                    
-                    // 确保美化视频渲染正在运行
-                    renderBeautifiedVideo();
-                }
-            }
+            // 不需要重新创建相机，MediaPipe Camera会自动处理多个视频元素的流共享
+            // 只需要确保美化视频渲染正在运行
+            renderBeautifiedVideo();
+            
+            console.log('校准页面设置完成');
         }
 
         function startCalibration() {
@@ -1615,7 +1626,7 @@
             
             if (!command) {
                 // 训练完成，显示结果
-                showResults();
+                showFinalResults();
                 return;
             }
             
@@ -2065,6 +2076,11 @@
             const activeStep = document.querySelector('.step-container.active');
             if (!activeStep) return;
             
+            // 调试信息
+            if (isCalibrating && Math.random() < 0.01) { // 1%概率打印，避免日志过多
+                console.log('renderBeautifiedVideo运行中，activeStep:', activeStep.id);
+            }
+            
             const video = activeStep.querySelector('video');
             const beautifiedCanvas = activeStep.querySelector('[id*="beautifiedCanvas"]');
             
@@ -2176,14 +2192,14 @@
                 }, { once: false });
             }
 
-            // 监听进入结果页（#resultsStep 被激活时）
-            const resultsStep = document.getElementById('resultsStep');
-            const observer = new MutationObserver(() => {
-                if (resultsStep.classList.contains('active')) {
-                    stopRecordingAndGo();
-                }
-            });
-            if (resultsStep) observer.observe(resultsStep, { attributes: true, attributeFilter: ['class'] });
+            // 注释掉自动跳转，让用户自己决定是否生成视频
+            // const resultsStep = document.getElementById('resultsStep');
+            // const observer = new MutationObserver(() => {
+            //     if (resultsStep.classList.contains('active')) {
+            //         stopRecordingAndGo();
+            //     }
+            // });
+            // if (resultsStep) observer.observe(resultsStep, { attributes: true, attributeFilter: ['class'] });
 
             // 分享视频按钮事件
             const shareBtn = document.getElementById('makeShareVideoBtn');
