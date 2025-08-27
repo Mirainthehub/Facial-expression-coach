@@ -31,8 +31,54 @@
 ## 🚀 快速开始
 
 ### 在线体验
-- **中文版**: [Live Demo](./index.html) 立即开始训练
-- **English**: [English Version](./index-en.html) Start training now
+- **中文版**: [Live Demo](https://mirainthehub.github.io/Facial-expression-coach/) 立即开始训练
+- **English**: [English Version](https://mirainthehub.github.io/Facial-expression-coach/index-en.html) Start training now
+- **专业版表情训练**: [Expression Coach Pro](https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro.html)
+- **京剧旦角训练**: [Peking Opera Dan Coach](https://mirainthehub.github.io/Facial-expression-coach/peking-opera-dan.html)
+
+### 扩展版本说明
+
+#### 专业版表情训练（Pro）
+- 适用场景：影视表演、舞台表演、短视频创作、主持/面试训练等对表情可读性与稳定性要求较高的场景。
+- 交互面板：
+  - 表演模式切换：影视镜头（近景强调细腻度）/ 舞台表演（远景强调幅度）
+  - 训练口令选择：自然微笑、Duchenne笑、惊讶、悲伤、厌恶、愤怒等
+  - 操作控制：Start Training / Next Expression / Quick Calibrate
+- 评分系统：
+  - 四维徽章分：Clarity（清晰度）、Consistency（一致性）、Intensity（强度）、Truth（真实性）
+  - 技术指标：Match（匹配度）、Symmetry（对称性）、Stability（稳定性）、Aesthetics（美观度）
+  - 总分与进度条实时反馈
+- 可视化反馈：
+  - 叠加嘴/眼轮廓，视频状态提示（"未检测到面部/面部检测正常"）
+  - 训练结束后的结果区块与图表（进度/雷达或曲线）
+- 算法要点（基于 MediaPipe FaceMesh 实时关键点）：
+  - mouthRatio、mouthOpen、eyeEAR、browActivity、symMouth、poseYawProxy、illumScore 等特征
+- 使用步骤：Quick Calibrate → 选择训练口令 → Start Training → 查看四维评分与建议
+- 在线体验：https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro.html
+
+#### 京剧旦角训练（Opera Dan）
+- 适用场景：戏曲表演训练（旦/青衣等），强调眼神、眉目配合与身段的"程式化"表达。
+- 角色/指令：
+  - 角色切换：旦（dan）/ 青衣（qingyi）
+  - 训练口令示例：
+    - 温婉悲伤（gentle_sadness）
+    - 含蓄羞怯（reserved_shyness）
+    - 雅致含笑（elegant_smile）
+    - 远望凝眸（distant_gaze）
+  - TTS 播报口令 + 戏曲风格倒计时
+- 评分系统（四维戏曲维度）：
+  - 眼神（Eye）、身段（Posture）、韵味（Charm）、神韵（Spirit）
+  - 总分与等级标签（程式精湛 / 程式标准 / 需要练习）
+- 可视化反馈：
+  - 金色眼部轮廓、红色眉线、暗金嘴部轮廓，附带眼神方向指示
+  - 结果页包含"戏曲雷达图"与"眼部特征曲线"
+- 戏曲特征要点（示例）：
+  - eyeDepth（眼神深度）、browEyeCoordination（眉眼配合）、facialSymmetry（面部对称）、gazeDirection（眼神方向）
+  - operaCharm ≈ (eyeDepth + facialSymmetry) / 2，用于体现"韵味"
+- 使用步骤：Quick Calibrate → 选择角色与动作 → Start Training → 查看指导建议与图表
+- 在线体验：https://mirainthehub.github.io/Facial-expression-coach/peking-opera-dan.html
+
+> 小提示：两个扩展版本均为纯前端实现，所有计算在本地浏览器完成；在生产/线上使用时请确保通过 HTTPS 访问（或在 localhost）以获得摄像头权限。
 
 ### 本地运行
 1. 克隆项目
