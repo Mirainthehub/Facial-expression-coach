@@ -1207,8 +1207,7 @@
                 } else if (currentStep === 3) { // Calibration step
                     await setupCalibrationVideo();
                 } else if (currentStep === 4) { // Training step
-                    setupTrainingVideo();
-                    loadCurrentExpression();
+                    await setupTrainingVideo();
                 }
             }
         }
@@ -1294,20 +1293,12 @@
 
             faceMesh.onResults(onFaceMeshResults);
 
-            // Due to MediaPipe Camera needing to bind to a fixed video element,
-            // we use the first video element and handle data flow through canvas
+            // Initial camera setup for camera test step
             camera = new Camera(document.getElementById('videoElement'), {
                 onFrame: async () => {
-                    // Use the camera-bound video element directly
                     const video = document.getElementById('videoElement');
                     if (video && video.videoWidth > 0) {
-                        // Debug: check frame sending during calibration
-                        if (isCalibrating && Math.random() < 0.05) { // 5% probability print
-                            console.log('Sending frame to MediaPipe, video size:', video.videoWidth, 'x', video.videoHeight);
-                        }
                         await faceMesh.send({image: video});
-                    } else if (isCalibrating) {
-                        console.warn('Video element not ready during calibration:', video ? 'no width' : 'no video');
                     }
                 },
                 width: 640,
@@ -1515,8 +1506,29 @@
             // Calibration page video setup
             document.getElementById('calibrationInstructions').textContent = 'Keep a relaxed neutral expression, don\'t smile or frown';
             
-            // No need to recreate camera, MediaPipe Camera automatically handles multiple video element stream sharing
-            // Just ensure beautified video rendering is running
+            // Force restart camera with the calibration video element
+            if (camera) {
+                camera.stop();
+            }
+            
+            // Recreate camera for calibration step
+            camera = new Camera(document.getElementById('videoElement2'), {
+                onFrame: async () => {
+                    const video = document.getElementById('videoElement2');
+                    if (video && video.videoWidth > 0) {
+                        if (isCalibrating && Math.random() < 0.05) {
+                            console.log('Calibration: sending frame to MediaPipe, video size:', video.videoWidth, 'x', video.videoHeight);
+                        }
+                        await faceMesh.send({image: video});
+                    } else if (isCalibrating) {
+                        console.warn('Calibration video element not ready:', video ? 'no width' : 'no video');
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            
+            camera.start();
             renderBeautifiedVideo();
             
             console.log('Calibration page setup complete');
@@ -1616,8 +1628,25 @@
         }
 
         // Training functions
-        function setupTrainingVideo() {
-            // Training page video setup
+        async function setupTrainingVideo() {
+            // Training page video setup - recreate camera for training step
+            if (camera) {
+                camera.stop();
+            }
+            
+            // Recreate camera for training step
+            camera = new Camera(document.getElementById('videoElement3'), {
+                onFrame: async () => {
+                    const video = document.getElementById('videoElement3');
+                    if (video && video.videoWidth > 0) {
+                        await faceMesh.send({image: video});
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            
+            camera.start();
             loadCurrentExpression();
         }
 

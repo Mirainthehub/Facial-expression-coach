@@ -1225,8 +1225,7 @@
                 } else if (currentStep === 3) { // 校准步骤
                     await setupCalibrationVideo();
                 } else if (currentStep === 4) { // 训练步骤
-                    setupTrainingVideo();
-                    loadCurrentExpression();
+                    await setupTrainingVideo();
                 }
             }
         }
@@ -1312,20 +1311,12 @@
 
             faceMesh.onResults(onFaceMeshResults);
 
-            // 由于MediaPipe Camera需要绑定到一个固定的视频元素，
-            // 我们使用第一个视频元素，并通过canvas来处理数据流
+            // 初始相机设置用于摄像头测试步骤
             camera = new Camera(document.getElementById('videoElement'), {
                 onFrame: async () => {
-                    // 直接使用相机绑定的视频元素
                     const video = document.getElementById('videoElement');
                     if (video && video.videoWidth > 0) {
-                        // 调试：校准期间检查帧发送
-                        if (isCalibrating && Math.random() < 0.05) { // 5%概率打印
-                            console.log('向MediaPipe发送帧，视频尺寸:', video.videoWidth, 'x', video.videoHeight);
-                        }
                         await faceMesh.send({image: video});
-                    } else if (isCalibrating) {
-                        console.warn('校准中视频元素未准备好:', video ? 'no width' : 'no video');
                     }
                 },
                 width: 640,
@@ -1531,8 +1522,29 @@
             // 校准页面视频设置
             document.getElementById('calibrationInstructions').textContent = '保持放松的中性表情，不要微笑或皱眉';
             
-            // 不需要重新创建相机，MediaPipe Camera会自动处理多个视频元素的流共享
-            // 只需要确保美化视频渲染正在运行
+            // 强制重启相机并绑定到校准视频元素
+            if (camera) {
+                camera.stop();
+            }
+            
+            // 为校准步骤重新创建相机
+            camera = new Camera(document.getElementById('videoElement2'), {
+                onFrame: async () => {
+                    const video = document.getElementById('videoElement2');
+                    if (video && video.videoWidth > 0) {
+                        if (isCalibrating && Math.random() < 0.05) {
+                            console.log('校准中向MediaPipe发送帧，视频尺寸:', video.videoWidth, 'x', video.videoHeight);
+                        }
+                        await faceMesh.send({image: video});
+                    } else if (isCalibrating) {
+                        console.warn('校准中视频元素未准备好:', video ? 'no width' : 'no video');
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            
+            camera.start();
             renderBeautifiedVideo();
             
             console.log('校准页面设置完成');
@@ -1636,8 +1648,25 @@
         }
 
         // 训练功能
-        function setupTrainingVideo() {
-            // 训练页面视频设置
+        async function setupTrainingVideo() {
+            // 训练页面视频设置 - 为训练步骤重新创建相机
+            if (camera) {
+                camera.stop();
+            }
+            
+            // 为训练步骤重新创建相机
+            camera = new Camera(document.getElementById('videoElement3'), {
+                onFrame: async () => {
+                    const video = document.getElementById('videoElement3');
+                    if (video && video.videoWidth > 0) {
+                        await faceMesh.send({image: video});
+                    }
+                },
+                width: 640,
+                height: 480
+            });
+            
+            camera.start();
             loadCurrentExpression();
         }
 
