@@ -1693,6 +1693,11 @@
         function startExpression() {
             if (isRunning) return;
             
+            // 第一次开始训练时启动录制
+            if (currentExpressionIndex === 0 && (!recorder || recorder.state === 'inactive')) {
+                startRecording();
+            }
+            
             const commandId = trainingSequence[currentExpressionIndex];
             const command = TRAINING_COMMANDS[commandId];
             
@@ -1889,6 +1894,9 @@
         }
 
         function showFinalResults() {
+            // 训练结束，停止录制但不跳转
+            stopRecordingOnly();
+            
             // 切换到结果页面
             document.getElementById('trainingStep').classList.remove('active');
             document.getElementById('resultsStep').classList.add('active');
@@ -2000,6 +2008,13 @@
             currentStep = 0;
             selectedMode = null;
             baseline = null;
+            
+            // 重置录制状态
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
+            }
+            recorder = null;
+            recordedChunks = [];
             
             // 重置UI
             document.getElementById('resultsStep').classList.remove('active');
@@ -2200,21 +2215,41 @@
             recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
             recorder.onstop = async () => {
                 const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                // 存到 sessionStorage，供下一页读取
+                // 存到 sessionStorage，供用户选择时读取
                 const b64 = await blobToBase64(blob);
                 sessionStorage.setItem('lastTrainingVideo_b64', b64);
-                // 跳转到预览+分享页
-                window.location.href = 'video-share.html';
+                
+                // 检查是否需要跳转
+                if (window.shouldJumpToVideo) {
+                    window.shouldJumpToVideo = false;
+                    window.location.href = 'video-share.html';
+                } else {
+                    console.log('训练视频已保存，等待用户选择是否分享');
+                }
             };
             recorder.start();
         }
 
-        function stopRecordingAndGo() {
+        function stopRecordingAndJump() {
+            // 停止录制并跳转到分享页面
             if (recorder && recorder.state !== 'inactive') {
+                // 临时设置跳转标志
+                window.shouldJumpToVideo = true;
                 recorder.stop();
             } else {
-                // 兜底：没有录到就提示
-                alert('No video recorded — please try training again.');
+                // 没有录制视频，检查是否有之前保存的视频
+                if (sessionStorage.getItem('lastTrainingVideo_b64')) {
+                    window.location.href = 'video-share.html';
+                } else {
+                    alert('没有录制到视频，请重新进行训练');
+                }
+            }
+        }
+        
+        function stopRecordingOnly() {
+            // 只停止录制，不跳转
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
             }
         }
 
@@ -2255,8 +2290,8 @@
             const shareBtn = document.getElementById('makeShareVideoBtn');
             if (shareBtn) {
                 shareBtn.addEventListener('click', () => {
-                    // 若录制已结束会直接跳转；若仍在录制则先停止再跳转
-                    stopRecordingAndGo();
+                    // 用户主动选择生成分享视频
+                    stopRecordingAndJump();
                 });
             }
         })();
