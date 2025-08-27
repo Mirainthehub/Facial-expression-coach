@@ -1195,7 +1195,7 @@
         };
 
         // Step navigation functions
-        function nextStep() {
+        async function nextStep() {
             if (currentStep < steps.length - 1) {
                 document.getElementById(steps[currentStep]).classList.remove('active');
                 currentStep++;
@@ -1205,7 +1205,7 @@
                 if (currentStep === 2) { // Camera setup step
                     initializeCamera();
                 } else if (currentStep === 3) { // Calibration step
-                    setupCalibrationVideo();
+                    await setupCalibrationVideo();
                 } else if (currentStep === 4) { // Training step
                     setupTrainingVideo();
                     loadCurrentExpression();
@@ -1294,11 +1294,20 @@
 
             faceMesh.onResults(onFaceMeshResults);
 
+            // Due to MediaPipe Camera needing to bind to a fixed video element,
+            // we use the first video element and handle data flow through canvas
             camera = new Camera(document.getElementById('videoElement'), {
                 onFrame: async () => {
-                    const currentCanvas = getCurrentProcessedCanvas();
-                    if (currentCanvas && currentCanvas.width > 0) {
-                        await faceMesh.send({image: currentCanvas});
+                    // Use the camera-bound video element directly
+                    const video = document.getElementById('videoElement');
+                    if (video && video.videoWidth > 0) {
+                        // Debug: check frame sending during calibration
+                        if (isCalibrating && Math.random() < 0.05) { // 5% probability print
+                            console.log('Sending frame to MediaPipe, video size:', video.videoWidth, 'x', video.videoHeight);
+                        }
+                        await faceMesh.send({image: video});
+                    } else if (isCalibrating) {
+                        console.warn('Video element not ready during calibration:', video ? 'no width' : 'no video');
                     }
                 },
                 width: 640,
@@ -1312,6 +1321,9 @@
             const activeStep = document.querySelector('.step-container.active');
             if (activeStep) {
                 const video = activeStep.querySelector('video');
+                if (isCalibrating && video) {
+                    console.log('Getting video element during calibration:', video.id, 'from step:', activeStep.id);
+                }
                 return video;
             }
             return document.getElementById('videoElement');
@@ -1338,6 +1350,11 @@
         function onFaceMeshResults(results) {
             const now = performance.now();
             
+            // Debug: check if MediaPipe is working during calibration
+            if (isCalibrating && Math.random() < 0.1) { // 10% probability print
+                console.log('MediaPipe onFaceMeshResults called, landmarks:', results.multiFaceLandmarks?.length || 0);
+            }
+            
             // Update FPS (simplified)
             frameCount++;
             if (now - lastFrameTime >= 1000) {
@@ -1352,7 +1369,12 @@
 
             // Get current active canvas
             const canvas = getCurrentCanvas();
-            if (!canvas) return;
+            if (!canvas) {
+                if (isCalibrating) {
+                    console.error('Cannot get current canvas during calibration');
+                }
+                return;
+            }
             
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1372,11 +1394,23 @@
                         timestamp: now,
                         metrics: metrics
                     });
+                    
+                    // Debug info
+                    if (isCalibrating && metricsBuffer.length % 5 === 0) {
+                        console.log(`Calibration in progress, collected ${metricsBuffer.length} data points`, metrics);
+                    }
+                } else if (isCalibrating) {
+                    // Debug: if calibrating but no valid data collected
+                    console.log('Calibrating but no valid data collected, metrics:', metrics);
                 }
                 
                 // Update video status
                 updateVideoStatus(true);
             } else {
+                // Debug: no face detected during calibration
+                if (isCalibrating) {
+                    console.log('No face landmarks detected during calibration');
+                }
                 updateVideoStatus(false);
             }
         }
@@ -1477,13 +1511,23 @@
         }
 
         // Calibration functions
-        function setupCalibrationVideo() {
+        async function setupCalibrationVideo() {
             // Calibration page video setup
             document.getElementById('calibrationInstructions').textContent = 'Keep a relaxed neutral expression, don\'t smile or frown';
+            
+            // No need to recreate camera, MediaPipe Camera automatically handles multiple video element stream sharing
+            // Just ensure beautified video rendering is running
+            renderBeautifiedVideo();
+            
+            console.log('Calibration page setup complete');
         }
 
         function startCalibration() {
             if (isCalibrating) return;
+            
+            console.log('Starting calibration process...');
+            console.log('MediaPipe status - faceMesh:', !!faceMesh, 'camera:', !!camera);
+            console.log('Current video element status:', document.getElementById('videoElement2')?.videoWidth || 'N/A');
             
             isCalibrating = true;
             metricsBuffer = [];
@@ -2153,14 +2197,14 @@
                 }, { once: false });
             }
 
-            // 监听进入结果页（#resultsStep 被激活时）
-            const resultsStep = document.getElementById('resultsStep');
-            const observer = new MutationObserver(() => {
-                if (resultsStep.classList.contains('active')) {
-                    stopRecordingAndGo();
-                }
-            });
-            if (resultsStep) observer.observe(resultsStep, { attributes: true, attributeFilter: ['class'] });
+            // Comment out automatic redirect, let user decide whether to generate video
+            // const resultsStep = document.getElementById('resultsStep');
+            // const observer = new MutationObserver(() => {
+            //     if (resultsStep.classList.contains('active')) {
+            //         stopRecordingAndGo();
+            //     }
+            // });
+            // if (resultsStep) observer.observe(resultsStep, { attributes: true, attributeFilter: ['class'] });
 
             // 分享视频按钮事件
             const shareBtn = document.getElementById('makeShareVideoBtn');
