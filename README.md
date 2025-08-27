@@ -31,8 +31,8 @@
 ## 🚀 快速开始
 
 ### 在线体验
-- **中文版**: [Live Demo](https://mirainthehub.github.io/Facial-expression-coach/) 立即开始训练
-- **English**: [English Version](https://mirainthehub.github.io/Facial-expression-coach/index-en.html) Start training now
+- **中文版**: [Live Demo](./index.html) 立即开始训练
+- **English**: [English Version](./index-en.html) Start training now
 
 ### 本地运行
 1. 克隆项目

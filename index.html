@@ -1199,7 +1199,7 @@
         };
 
         // 步骤导航函数
-        function nextStep() {
+        async function nextStep() {
             if (currentStep < steps.length - 1) {
                 document.getElementById(steps[currentStep]).classList.remove('active');
                 currentStep++;
@@ -1209,7 +1209,7 @@
                 if (currentStep === 2) { // 摄像头准备步骤
                     initializeCamera();
                 } else if (currentStep === 3) { // 校准步骤
-                    setupCalibrationVideo();
+                    await setupCalibrationVideo();
                 } else if (currentStep === 4) { // 训练步骤
                     setupTrainingVideo();
                     loadCurrentExpression();
@@ -1371,6 +1371,11 @@
                         timestamp: now,
                         metrics: metrics
                     });
+                    
+                    // 调试信息
+                    if (isCalibrating && metricsBuffer.length % 10 === 0) {
+                        console.log(`校准进行中，已收集 ${metricsBuffer.length} 个数据点`);
+                    }
                 }
                 
                 // 更新视频状态
@@ -1476,14 +1481,38 @@
         }
 
         // 校准功能
-        function setupCalibrationVideo() {
+        async function setupCalibrationVideo() {
             // 校准页面视频设置
             document.getElementById('calibrationInstructions').textContent = '保持放松的中性表情，不要微笑或皱眉';
+            
+            // 确保摄像头已初始化并为校准页面设置
+            if (camera) {
+                // 更新相机以使用校准页面的视频元素
+                const calibrationVideo = document.getElementById('videoElement2');
+                if (calibrationVideo && calibrationVideo.srcObject) {
+                    // 视频流已存在，更新相机配置
+                    camera = new Camera(calibrationVideo, {
+                        onFrame: async () => {
+                            const currentCanvas = getCurrentProcessedCanvas();
+                            if (currentCanvas && currentCanvas.width > 0) {
+                                await faceMesh.send({image: currentCanvas});
+                            }
+                        },
+                        width: 640,
+                        height: 480
+                    });
+                    camera.start();
+                    
+                    // 确保美化视频渲染正在运行
+                    renderBeautifiedVideo();
+                }
+            }
         }
 
         function startCalibration() {
             if (isCalibrating) return;
             
+            console.log('开始校准流程...');
             isCalibrating = true;
             metricsBuffer = [];
             
@@ -1538,8 +1567,11 @@
         function finishCalibration() {
             isCalibrating = false;
             
+            console.log(`校准结束，收集到 ${metricsBuffer.length} 个数据点`);
+            
             if (metricsBuffer.length > 0) {
                 baseline = calculateBaseline(metricsBuffer);
+                console.log('计算的基线数据:', baseline);
                 updateStatus('校准完成', 'ready');
                 
                 // 显示成功并自动进入下一步
@@ -1551,6 +1583,7 @@
                 }, 2000);
                 
             } else {
+                console.error('校准失败：未收集到面部数据');
                 updateStatus('校准失败', 'error');
                 document.getElementById('calibrationBtn').disabled = false;
                 document.getElementById('calibrationInstructions').textContent = '未检测到面部，请重试校准';
