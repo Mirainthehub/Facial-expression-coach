@@ -1312,12 +1312,20 @@
 
             faceMesh.onResults(onFaceMeshResults);
 
+            // 由于MediaPipe Camera需要绑定到一个固定的视频元素，
+            // 我们使用第一个视频元素，并通过canvas来处理数据流
             camera = new Camera(document.getElementById('videoElement'), {
                 onFrame: async () => {
-                    // 使用当前活跃的视频元素
-                    const currentVideo = getCurrentVideo();
-                    if (currentVideo && currentVideo.videoWidth > 0) {
-                        await faceMesh.send({image: currentVideo});
+                    // 直接使用相机绑定的视频元素
+                    const video = document.getElementById('videoElement');
+                    if (video && video.videoWidth > 0) {
+                        // 调试：校准期间检查帧发送
+                        if (isCalibrating && Math.random() < 0.05) { // 5%概率打印
+                            console.log('向MediaPipe发送帧，视频尺寸:', video.videoWidth, 'x', video.videoHeight);
+                        }
+                        await faceMesh.send({image: video});
+                    } else if (isCalibrating) {
+                        console.warn('校准中视频元素未准备好:', video ? 'no width' : 'no video');
                     }
                 },
                 width: 640,
@@ -1363,6 +1371,11 @@
         function onFaceMeshResults(results) {
             const now = performance.now();
             
+            // 调试：校准期间MediaPipe是否在工作
+            if (isCalibrating && Math.random() < 0.1) { // 10%概率打印
+                console.log('MediaPipe onFaceMeshResults 被调用，landmarks:', results.multiFaceLandmarks?.length || 0);
+            }
+            
             // 更新FPS (简化版)
             frameCount++;
             if (now - lastFrameTime >= 1000) {
@@ -1372,7 +1385,12 @@
 
             // 获取当前活动的canvas
             const canvas = getCurrentCanvas();
-            if (!canvas) return;
+            if (!canvas) {
+                if (isCalibrating) {
+                    console.error('校准中无法获取当前canvas');
+                }
+                return;
+            }
             
             const ctx = canvas.getContext('2d');
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1524,6 +1542,9 @@
             if (isCalibrating) return;
             
             console.log('开始校准流程...');
+            console.log('MediaPipe状态 - faceMesh:', !!faceMesh, 'camera:', !!camera);
+            console.log('当前视频元素状态:', document.getElementById('videoElement2')?.videoWidth || 'N/A');
+            
             isCalibrating = true;
             metricsBuffer = [];
             
