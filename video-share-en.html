@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>分享训练视频 - 面部表情教练</title>
+    <title>Share Training Video - Facial Expression Coach</title>
     <!-- FFmpeg.wasm for video generation -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.js"></script>
     <!-- QRCode generation library -->
@@ -351,7 +351,7 @@
             opacity: 0.8;
         }
 
-        /* 响应式设计 */
+        /* Responsive design */
         @media (max-width: 768px) {
             .container {
                 width: 95%;
@@ -376,7 +376,7 @@
             }
         }
 
-        /* 动画效果 */
+        /* Animation effects */
         .fade-in {
             animation: fadeIn 0.6s ease-in-out;
         }
@@ -396,15 +396,15 @@
 <body>
     <div class="container fade-in">
         <div class="header">
-            <h1>🎬 训练视频已生成</h1>
-            <p>您的面部表情训练精彩瞬间已录制完成</p>
+            <h1>🎬 Training Video Generated</h1>
+            <p>Your facial expression training highlights have been successfully recorded</p>
         </div>
 
         <div class="video-section">
             <div class="video-container">
                 <video id="recordedVideo" class="video-player" muted>
                     <source src="" type="video/webm">
-                    您的浏览器不支持视频播放。
+                    Your browser does not support video playback.
                 </video>
                 <div class="video-overlay" id="videoOverlay">
                     <div class="play-button">▶️</div>
@@ -412,92 +412,92 @@
             </div>
 
             <div class="video-info">
-                <h3 style="margin-bottom: 1rem; color: #e0e7ff;">✨ 您的表情训练视频</h3>
+                <h3 style="margin-bottom: 1rem; color: #e0e7ff;">✨ Your Expression Training Video</h3>
                 <p style="color: #a0a9c0; text-align: center; line-height: 1.5;">
-                    基于您刚才的表情训练照片生成的专属视频，展现了您在训练过程中的精彩瞬间
+                    A personalized video generated from your expression training photos, showcasing your highlights during the training process
                 </p>
             </div>
         </div>
 
         <div class="actions-section">
-            <h3 class="actions-title">📱 分享您的成果</h3>
+            <h3 class="actions-title">📱 Share Your Results</h3>
             
             <div class="btn-group">
                 <button class="action-btn btn-download" id="downloadBtn">
                     <span>📥</span>
-                    <span>下载视频</span>
+                    <span>Download Video</span>
                 </button>
                 
                 <button class="action-btn btn-share" id="shareBtn">
                     <span>🔗</span>
-                    <span>一键分享</span>
+                    <span>Quick Share</span>
                 </button>
                 
                 <button class="action-btn btn-wechat" id="wechatBtn">
                     <span>💬</span>
-                    <span>微信分享</span>
+                    <span>WeChat Share</span>
                 </button>
                 
                 <a href="javascript:history.back()" class="action-btn btn-back">
                     <span>🔙</span>
-                    <span>返回训练</span>
+                    <span>Back to Training</span>
                 </a>
             </div>
 
             <div class="loading" id="loadingSection">
                 <div class="spinner"></div>
-                <p>正在处理...</p>
+                <p>Processing...</p>
             </div>
 
             <div class="success-message" id="successMessage">
                 <span>✅</span>
-                <span>操作成功完成！</span>
+                <span>Operation completed successfully!</span>
             </div>
 
             <div class="qr-section" id="qrSection">
-                <h4 style="margin-bottom: 1rem;">微信扫码分享</h4>
+                <h4 style="margin-bottom: 1rem;">WeChat QR Code Share</h4>
                 <div class="qr-code" id="qrCode">
-                    二维码将在这里显示
+                    QR code will be displayed here
                 </div>
-                <p style="opacity: 0.8; font-size: 0.9rem;">使用微信扫描二维码分享到朋友圈</p>
+                <p style="opacity: 0.8; font-size: 0.9rem;">Scan with WeChat to share to Moments</p>
             </div>
         </div>
     </div>
 
     <script>
-        // 全局变量
+        // Global variables
         let videoBlob = null;
         let videoUrl = null;
         
-        // 页面加载时初始化
+        // Initialize on page load
         document.addEventListener('DOMContentLoaded', function() {
             loadVideoFromStorage();
             setupEventListeners();
         });
 
-        // 从 sessionStorage 加载照片数据
+        // Load photo data from sessionStorage
         function loadVideoFromStorage() {
             try {
-                // 先尝试加载新的照片数据
-                console.log('尝试加载照片数据...');
+                // First try to load new photo data
+                console.log('Attempting to load photo data...');
                 const capturedPhotosData = sessionStorage.getItem('capturedPhotos');
-                console.log('sessionStorage中的照片数据:', capturedPhotosData);
+                console.log('Photo data in sessionStorage:', capturedPhotosData);
                 
                 if (capturedPhotosData) {
                     const photos = JSON.parse(capturedPhotosData);
-                    console.log('找到照片数据:', photos.length, '张照片', photos);
+                    console.log('Found photo data:', photos.length, 'photos', photos);
                     
-                    // 用照片生成视频
+                    // Generate video from photos
                     generateVideoFromPhotos(photos);
                     return;
                 }
                 
-                // 兼容旧的视频数据格式
+                // Compatible with old video data format
                 const videoData = sessionStorage.getItem('recordedVideoBlob') || sessionStorage.getItem('lastTrainingVideo_b64');
                 const trainingData = JSON.parse(sessionStorage.getItem('trainingData') || '{}');
                 
                 if (videoData) {
-                    // 将 Base64 转换回 Blob
+                    // Convert Base64 back to Blob
                     const byteCharacters = atob(videoData);
                     const byteNumbers = new Array(byteCharacters.length);
                     for (let i = 0; i < byteCharacters.length; i++) {
@@ -506,36 +506,36 @@
                     const byteArray = new Uint8Array(byteNumbers);
                     videoBlob = new Blob([byteArray], { type: 'video/webm' });
                     
-                    // 创建视频 URL 并设置到 video 元素
+                    // Create video URL and set to video element
                     videoUrl = URL.createObjectURL(videoBlob);
                     const videoElement = document.getElementById('recordedVideo');
                     videoElement.src = videoUrl;
                     
-                    // 更新视频信息
+                    // Update video info
                     updateVideoStats(videoBlob, trainingData);
                 } else {
-                    // 没有数据，显示错误
-                    showError('未找到训练数据，请重新进行表情训练');
+                    // No data, show error
+                    showError('Training data not found, please redo expression training');
                 }
             } catch (error) {
-                console.error('加载数据失败:', error);
-                showError('数据加载失败');
+                console.error('Data loading failed:', error);
+                showError('Data loading failed');
             }
         }
         
-        // 使用FFmpeg.wasm生成视频
+        // Generate video using FFmpeg.wasm
         let ffmpeg;
         
         async function generateVideoFromPhotos(photos) {
             if (photos.length === 0) {
-                showError('没有找到照片数据');
+                showError('No photo data found');
                 return;
             }
             
             try {
-                showProgress('正在初始化视频生成器...');
+                showProgress('Initializing video generator...');
                 
-                // 初始化FFmpeg
+                // Initialize FFmpeg
                 if (!ffmpeg) {
                     ffmpeg = new FFmpeg.FFmpeg();
                     await ffmpeg.load({
@@ -544,13 +544,13 @@
                     console.log('FFmpeg loaded successfully');
                 }
                 
-                showProgress('正在处理照片数据...');
+                showProgress('Processing photo data...');
                 
-                // 将照片写入FFmpeg文件系统
+                // Write photos to FFmpeg file system
                 for (let i = 0; i < photos.length; i++) {
                     const photo = photos[i];
                     
-                    // 将base64转换为Uint8Array
+                    // Convert base64 to Uint8Array
                     const base64Data = photo.dataUrl.split(',')[1];
                     const binaryString = atob(base64Data);
                     const bytes = new Uint8Array(binaryString.length);
@@ -558,80 +558,80 @@
                         bytes[j] = binaryString.charCodeAt(j);
                     }
                     
-                    // 写入FFmpeg文件系统，使用序号命名
+                    // Write to FFmpeg file system with sequence numbering
                     const filename = `image${String(i).padStart(3, '0')}.jpg`;
                     await ffmpeg.writeFile(filename, bytes);
-                    console.log(`写入照片 ${i + 1}/${photos.length}: ${filename}`);
+                    console.log(`Writing photo ${i + 1}/${photos.length}: ${filename}`);
                 }
                 
-                showProgress('正在生成视频...');
+                showProgress('Generating video...');
                 
-                // 使用FFmpeg生成视频 - 紫色主题
-                // 每张图片显示2秒，总共生成一个循环播放的视频
+                // Generate video using FFmpeg - Purple theme
+                // Each image displays for 2 seconds, generating a looping video
                 await ffmpeg.exec([
-                    '-framerate', '0.5', // 0.5fps = 每张图片2秒
+                    '-framerate', '0.5', // 0.5fps = 2 seconds per image
                     '-i', 'image%03d.jpg',
-                    '-vf', 'scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2:#6B46C1', // 紫色背景
+                    '-vf', 'scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2:#6B46C1', // Purple background
                     '-pix_fmt', 'yuv420p',
                     '-c:v', 'libx264',
-                    '-t', `${photos.length * 2}`, // 总时长
+                    '-t', `${photos.length * 2}`, // Total duration
                     'output.mp4'
                 ]);
                 
-                showProgress('正在获取视频数据...');
+                showProgress('Retrieving video data...');
                 
-                // 读取生成的视频
+                // Read generated video
                 const data = await ffmpeg.readFile('output.mp4');
                 videoBlob = new Blob([data.buffer], { type: 'video/mp4' });
                 videoUrl = URL.createObjectURL(videoBlob);
                 
-                // 设置视频
+                // Set video
                 const videoElement = document.getElementById('recordedVideo');
                 videoElement.src = videoUrl;
                 
-                // 清理FFmpeg文件系统
+                // Clean FFmpeg file system
                 for (let i = 0; i < photos.length; i++) {
                     const filename = `image${String(i).padStart(3, '0')}.jpg`;
                     try {
                         await ffmpeg.deleteFile(filename);
                     } catch (e) {
-                        // 忽略删除错误
+                        // Ignore deletion errors
                     }
                 }
                 await ffmpeg.deleteFile('output.mp4');
                 
-                // 更新界面
+                // Update interface
                 hideProgress();
                 updateVideoStats(videoBlob, { photos: photos.length });
-                console.log('✅ FFmpeg视频生成成功！');
+                console.log('✅ FFmpeg video generation successful!');
                 
             } catch (error) {
-                console.error('FFmpeg视频生成失败:', error);
+                console.error('FFmpeg video generation failed:', error);
                 hideProgress();
                 
-                // 如果FFmpeg失败，尝试备用方案
-                console.log('尝试备用视频生成方案...');
+                // If FFmpeg fails, try backup method
+                console.log('Trying backup video generation method...');
                 try {
                     await generateVideoFallback(photos);
                 } catch (fallbackError) {
-                    console.error('备用方案也失败:', fallbackError);
-                    showError('视频生成失败，请重试');
+                    console.error('Backup method also failed:', fallbackError);
+                    showError('Video generation failed, please try again');
                 }
             }
         }
         
-        // 备用方案：使用Canvas + MediaRecorder
+        // Backup method: using Canvas + MediaRecorder
         async function generateVideoFallback(photos) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 640;
             canvas.height = 480;
             
-            showProgress('使用备用方案生成视频...');
+            showProgress('Using backup method to generate video...');
             
-            // 检查MediaRecorder支持
+            // Check MediaRecorder support
             if (!window.MediaRecorder) {
-                throw new Error('浏览器不支持视频录制');
+                throw new Error('Browser does not support video recording');
             }
             
             const stream = canvas.captureStream(25);
@@ -656,7 +656,7 @@
                         
                         hideProgress();
                         updateVideoStats(videoBlob, { photos: photos.length });
-                        console.log('✅ 备用方案视频生成成功！');
+                        console.log('✅ Backup method video generation successful!');
                         resolve();
                     } catch (error) {
                         reject(error);
@@ -666,7 +666,7 @@
                 mediaRecorder.onerror = reject;
                 mediaRecorder.start();
                 
-                // 渲染每张照片
+                // Render each photo
                 let currentIndex = 0;
                 const renderInterval = setInterval(() => {
                     if (currentIndex >= photos.length) {
@@ -677,14 +677,14 @@
                     
                     const img = new Image();
                     img.onload = () => {
-                        // 紫色渐变背景
+                        // Purple gradient background
                         const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-                        gradient.addColorStop(0, '#8B5CF6'); // 亮紫色
-                        gradient.addColorStop(1, '#6B46C1'); // 深紫色
+                        gradient.addColorStop(0, '#8B5CF6'); // Light purple
+                        gradient.addColorStop(1, '#6B46C1'); // Dark purple
                         ctx.fillStyle = gradient;
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
                         
-                        // 居中绘制照片
+                        // Draw photo centered
                         const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
                         const width = img.width * scale;
                         const height = img.height * scale;
@@ -693,21 +693,21 @@
                         
                         ctx.drawImage(img, x, y, width, height);
                         
-                        // 为照片添加紫色发光边框
+                        // Add purple glowing border to photo
                         ctx.shadowColor = '#A855F7';
                         ctx.shadowBlur = 15;
                         ctx.strokeStyle = '#A855F7';
                         ctx.lineWidth = 4;
                         ctx.strokeRect(x - 2, y - 2, width + 4, height + 4);
-                        ctx.shadowBlur = 0; // 重置阴影
+                        ctx.shadowBlur = 0; // Reset shadow
                         
-                        // 添加标题 - 白色文字配紫色边框
+                        // Add title - white text with purple border
                         ctx.fillStyle = '#FFFFFF';
                         ctx.strokeStyle = '#6B46C1';
                         ctx.lineWidth = 2;
                         ctx.font = 'bold 24px Arial';
                         ctx.textAlign = 'center';
-                        const text = photos[currentIndex].expressionName || '表情练习';
+                        const text = photos[currentIndex].expressionName || 'Expression Practice';
                         ctx.strokeText(text, canvas.width / 2, 40);
                         ctx.fillText(text, canvas.width / 2, 40);
                     };
@@ -717,7 +717,7 @@
             });
         }
         
-        // 显示进度
+        // Show progress
         function showProgress(message, detail = '') {
             const overlay = document.getElementById('progressOverlay');
             const messageEl = document.getElementById('progressMessage');
@@ -730,25 +730,25 @@
             console.log('Progress:', message, detail);
         }
         
-        // 隐藏进度
+        // Hide progress
         function hideProgress() {
             const overlay = document.getElementById('progressOverlay');
             overlay.classList.remove('show');
             console.log('Progress completed');
         }
 
-        // 更新视频统计信息
+        // Update video statistics
         function updateVideoStats(blob, trainingData) {
-            // 简化版本 - 只需要确保视频能正常播放
+            // Simplified version - just ensure video can play normally
             console.log('Video generated successfully:', {
                 size: `${(blob.size / (1024 * 1024)).toFixed(2)} MB`,
                 photos: trainingData.photos || 5
             });
         }
 
-        // 设置事件监听器
+        // Set up event listeners
         function setupEventListeners() {
-            // 视频播放控制
+            // Video playback control
             const videoElement = document.getElementById('recordedVideo');
             const overlay = document.getElementById('videoOverlay');
             
@@ -765,20 +765,20 @@
                 overlay.classList.remove('playing');
             });
             
-            // 下载按钮
+            // Download button
             document.getElementById('downloadBtn').addEventListener('click', downloadVideo);
             
-            // 分享按钮
+            // Share button
             document.getElementById('shareBtn').addEventListener('click', shareVideo);
             
-            // 微信分享按钮
+            // WeChat share button
             document.getElementById('wechatBtn').addEventListener('click', shareToWechat);
         }
 
-        // 下载视频
+        // Download video
         function downloadVideo() {
             if (!videoBlob) {
-                showError('没有可下载的视频');
+                showError('No video available for download');
                 return;
             }
             
@@ -799,124 +799,124 @@
                     document.body.removeChild(downloadLink);
                     
                     hideLoading();
-                    showSuccess('视频下载成功！');
+                    showSuccess('Video download successful!');
                 } catch (error) {
-                    console.error('下载失败:', error);
+                    console.error('Download failed:', error);
                     hideLoading();
-                    showError('下载失败，请重试');
+                    showError('Download failed, please try again');
                 }
             }, 1000);
         }
 
-        // 一键分享
+        // Quick share
         async function shareVideo() {
             if (!videoBlob) {
-                showError('没有可分享的视频');
+                showError('No video available for sharing');
                 return;
             }
             
-            // 检查是否支持 Web Share API
+            // Check if Web Share API is supported
             if (navigator.share && navigator.canShare) {
                 try {
                     showLoading();
                     
-                    // 创建文件对象
+                    // Create file object
                     const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
                     const filename = `facial_expression_training_${timestamp}.webm`;
                     const file = new File([videoBlob], filename, { type: 'video/webm' });
                     
                     if (navigator.canShare({ files: [file] })) {
                         await navigator.share({
-                            title: '我的面部表情训练视频',
-                            text: '看看我的面部表情训练成果！',
+                            title: 'My Facial Expression Training Video',
+                            text: 'Check out my facial expression training results!',
                             files: [file]
                         });
                         
                         hideLoading();
-                        showSuccess('分享成功！');
+                        showSuccess('Share successful!');
                     } else {
-                        // 降级到链接分享
+                        // Fallback to link sharing
                         await navigator.share({
-                            title: '我的面部表情训练视频',
-                            text: '看看我的面部表情训练成果！',
+                            title: 'My Facial Expression Training Video',
+                            text: 'Check out my facial expression training results!',
                             url: window.location.href
                         });
                         
                         hideLoading();
-                        showSuccess('分享链接已复制！');
+                        showSuccess('Share link copied!');
                     }
                 } catch (error) {
                     hideLoading();
                     if (error.name !== 'AbortError') {
-                        console.error('分享失败:', error);
+                        console.error('Share failed:', error);
                         copyToClipboard();
                     }
                 }
             } else {
-                // 不支持 Web Share API，复制链接到剪贴板
+                // Does not support Web Share API, copy link to clipboard
                 copyToClipboard();
             }
         }
 
-        // 复制链接到剪贴板
+        // Copy link to clipboard
         async function copyToClipboard() {
             try {
-                const shareText = `🎭 看看我的面部表情训练成果！\n\n通过面部表情教练应用，我已经掌握了专业的表情技巧。快来一起训练吧！\n\n${window.location.origin}`;
+                const shareText = `🎭 Check out my facial expression training results!\n\nThrough the Facial Expression Coach app, I have mastered professional expression techniques. Come train together!\n\n${window.location.origin}`;
                 
                 await navigator.clipboard.writeText(shareText);
-                showSuccess('分享文案已复制到剪贴板！');
+                showSuccess('Share text copied to clipboard!');
             } catch (error) {
-                console.error('复制失败:', error);
-                showError('复制失败，请手动复制链接');
+                console.error('Copy failed:', error);
+                showError('Copy failed, please manually copy the link');
             }
         }
 
-        // 微信分享
+        // WeChat share
         function shareToWechat() {
             showLoading();
             
             setTimeout(() => {
                 hideLoading();
                 
-                // 显示二维码区域
+                // Show QR code area
                 const qrSection = document.getElementById('qrSection');
                 qrSection.style.display = 'block';
                 
-                // 生成分享二维码（这里使用模拟的二维码，实际项目中应该使用真实的二维码生成服务）
+                // Generate share QR code
                 generateQRCode();
                 
-                // 平滑滚动到二维码区域
+                // Smooth scroll to QR code area
                 qrSection.scrollIntoView({ behavior: 'smooth' });
             }, 1500);
         }
 
-        // 生成真实二维码
+        // Generate real QR code
         async function generateQRCode() {
             const qrCode = document.getElementById('qrCode');
             
             try {
-                // 获取当前页面URL作为分享链接
+                // Get current page URL as share link
                 const currentUrl = window.location.href;
                 
-                // 生成二维码
+                // Generate QR code
                 const canvas = document.createElement('canvas');
                 await QRCode.toCanvas(canvas, currentUrl, {
                     width: 120,
                     height: 120,
                     color: {
-                        dark: '#6B46C1',  // 紫色二维码
-                        light: '#FFFFFF'  // 白色背景
+                        dark: '#6B46C1',  // Purple QR code
+                        light: '#FFFFFF'  // White background
                     }
                 });
                 
-                // 清空并添加二维码
+                // Clear and add QR code
                 qrCode.innerHTML = '';
                 qrCode.appendChild(canvas);
                 
-                // 添加提示文字
+                // Add tip text
                 const tip = document.createElement('div');
                 tip.style.cssText = 'font-size: 12px; color: #666; text-align: center; margin-top: 10px;';
-                tip.textContent = '使用微信扫描分享到朋友圈';
+                tip.textContent = 'Scan with WeChat to share to Moments';
                 qrCode.appendChild(tip);
                 
                 console.log('QR code generated successfully');
@@ -924,8 +924,8 @@
                 console.error('QR code generation failed:', error);
                 qrCode.innerHTML = `
                     <div style="font-size: 12px; color: #666; text-align: center;">
-                        <div style="color: #ff6b6b; margin-bottom: 10px;">⚠️ 二维码生成失败</div>
-                        <div>请直接复制链接分享：</div>
+                        <div style="color: #ff6b6b; margin-bottom: 10px;">⚠️ QR code generation failed</div>
+                        <div>Please copy the link directly to share:</div>
                         <div style="word-break: break-all; background: #f5f5f5; padding: 8px; border-radius: 4px; margin-top: 8px; font-size: 10px;">
                             ${window.location.href}
                         </div>
@@ -934,17 +934,17 @@
             }
         }
 
-        // 显示加载状态
+        // Show loading state
         function showLoading() {
             document.getElementById('loadingSection').style.display = 'block';
         }
 
-        // 隐藏加载状态
+        // Hide loading state
         function hideLoading() {
             document.getElementById('loadingSection').style.display = 'none';
         }
 
-        // 显示成功消息
+        // Show success message
         function showSuccess(message) {
             const successElement = document.getElementById('successMessage');
             successElement.querySelector('span:last-child').textContent = message;
@@ -955,12 +955,12 @@
             }, 3000);
         }
 
-        // 显示错误信息
+        // Show error message
         function showError(message) {
             alert('❌ ' + message);
         }
 
-        // 页面卸载时清理资源
+        // Clean up resources when page unloads
         window.addEventListener('beforeunload', function() {
             if (videoUrl) {
                 URL.revokeObjectURL(videoUrl);
@@ -972,8 +972,8 @@
     <div class="progress-overlay" id="progressOverlay">
         <div class="progress-content">
             <div class="progress-spinner"></div>
-            <div class="progress-message" id="progressMessage">正在处理...</div>
-            <div class="progress-detail" id="progressDetail">请稍候</div>
+            <div class="progress-message" id="progressMessage">Processing...</div>
+            <div class="progress-detail" id="progressDetail">Please wait</div>
         </div>
     </div>
 </body>

@@ -199,7 +199,7 @@
             line-height: 1.5;
         }
         
-        /* 校准屏幕 */
+        /* Calibration screen */
         .calibration-content {
             max-width: 800px;
             margin: 0 auto;
@@ -390,7 +390,7 @@
             100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
         
-        /* 训练屏幕 */
+        /* Training screen */
         .training-content {
             display: grid;
             grid-template-columns: 1fr 400px;
@@ -451,7 +451,7 @@
             transition: width 0.1s ease;
         }
         
-        /* 结果屏幕 */
+        /* Results screen */
         .results-content {
             max-width: 1000px;
             margin: 0 auto;
@@ -546,7 +546,7 @@
             line-height: 1.5;
         }
         
-        /* 按钮样式 */
+        /* Button styles */
         .btn {
             padding: 15px 30px;
             border: none;
@@ -599,7 +599,7 @@
             margin-top: 30px;
         }
         
-        /* 生成视频按钮特殊样式 */
+        /* Generate video button special styles */
         #makeShareVideoBtn {
             background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
             font-size: 18px;
@@ -612,7 +612,7 @@
             box-shadow: 0 6px 25px rgba(255, 107, 107, 0.4);
         }
         
-        /* 动画和效果 */
+        /* Animations and effects */
         .celebration {
             position: fixed;
             top: 0;
@@ -642,7 +642,7 @@
             }
         }
         
-        /* 状态指示器 */
+        /* Status indicator */
         .status-indicator {
             position: fixed;
             top: 20px;
@@ -671,7 +671,7 @@
             color: #ffffff;
         }
         
-        /* 语言切换 */
+        /* Language switcher */
         .language-switcher {
             position: fixed;
             top: 20px;
@@ -699,7 +699,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         
-        /* 响应式设计 */
+        /* Responsive design */
         @media (max-width: 768px) {
             .app-container {
                 padding: 15px;
@@ -730,13 +730,13 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- 语言切换 -->
+        <!-- Language switcher -->
         <div class="language-switcher">
             <a href="./index-en.html" class="lang-link">🇺🇸 English</a>
         </div>
         
-        <!-- 状态指示器 -->
-        <div class="status-indicator" id="statusIndicator">初始化中...</div>
+        <!-- Status indicator -->
+        <div class="status-indicator" id="statusIndicator">Initializing...</div>
         
         <!-- Step 1: Welcome Screen -->
         <div class="step-container active" id="welcomeStep">
@@ -751,7 +751,7 @@
             <div class="welcome-content">
                 <div class="welcome-icon">🎭</div>
                 <h1 class="step-title">Facial Expression Coach</h1>
-                <p class="step-subtitle">AI驱动的专业表演训练系统</p>
+                <p class="step-subtitle">AI-driven professional acting training system</p>
                 
                 <div class="feature-list">
                     <div class="feature-item">
@@ -760,7 +760,7 @@
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">📊</span>
-                        <span>四维专业评分系统</span>
+                        <span>Four-dimensional professional scoring system</span>
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">🎯</span>
@@ -768,11 +768,11 @@
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">✨</span>
-                        <span>智能美颜，提升自信</span>
+                        <span>Smart beauty filter, boost confidence</span>
                     </div>
                     <div class="feature-item">
                         <span class="feature-icon">🔒</span>
-                        <span>本地计算，保护隐私</span>
+                        <span>Local computation, privacy protected</span>
                     </div>
                 </div>
                 
@@ -793,7 +793,7 @@
             </div>
             
             <h2 class="step-title">Choose Performance Mode</h2>
-            <p class="step-subtitle">不同模式将影响评分标准和训练重点</p>
+            <p class="step-subtitle">Different modes will affect scoring criteria and training focus</p>
             
             <div class="mode-selection">
                 <div class="mode-card" onclick="selectMode('film')">
@@ -814,8 +814,8 @@
             </div>
             
             <div class="btn-group">
-                <button class="btn btn-secondary" onclick="prevStep()">返回</button>
-                <button class="btn btn-primary" id="modeNextBtn" onclick="nextStep()" disabled>下一步</button>
+                <button class="btn btn-secondary" onclick="prevStep()">Back</button>
+                <button class="btn btn-primary" id="modeNextBtn" onclick="nextStep()" disabled>Next</button>
             </div>
         </div>
         
@@ -829,7 +829,7 @@
                 <div class="progress-dot"></div>
             </div>
             
-            <h2 class="step-title">摄像头准备</h2>
+            <h2 class="step-title">Camera Setup</h2>
             <p class="step-subtitle">Please allow camera access and ensure your face is clearly visible</p>
             
             <div class="calibration-content">
@@ -846,22 +846,22 @@
                                 <div class="beauty-switch" id="beautySwitch" onclick="toggleBeauty()">
                                     <div class="beauty-switch-knob"></div>
                                 </div>
-                                <span class="beauty-label">美颜</span>
+                                <span class="beauty-label">Beauty</span>
                             </div>
                             
                             
                             <div class="beauty-slider" id="smoothSlider">
-                                <div class="beauty-slider-label">磨皮</div>
+                                <div class="beauty-slider-label">Smooth</div>
                                 <input type="range" min="0" max="100" value="50" id="smoothRange" oninput="updateBeauty()">
                             </div>
                             
                             <div class="beauty-slider" id="brightnessSlider">
-                                <div class="beauty-slider-label">亮度</div>
+                                <div class="beauty-slider-label">Brightness</div>
                                 <input type="range" min="-50" max="50" value="10" id="brightnessRange" oninput="updateBeauty()">
                             </div>
                             
                             <div class="beauty-slider" id="contrastSlider">
-                                <div class="beauty-slider-label">对比</div>
+                                <div class="beauty-slider-label">Contrast</div>
                                 <input type="range" min="-50" max="50" value="15" id="contrastRange" oninput="updateBeauty()">
                             </div>
                         </div>
@@ -875,17 +875,17 @@
                     </div>
                     <div class="feature-item" style="justify-content: center;">
                         <span class="feature-icon">👤</span>
-                        <span>保持正面朝向摄像头</span>
+                        <span>Keep facing the camera directly</span>
                     </div>
                     <div class="feature-item" style="justify-content: center;">
                         <span class="feature-icon">📏</span>
-                        <span>头部占据画面1/3左右</span>
+                        <span>Head should occupy about 1/3 of the frame</span>
                     </div>
                 </div>
             </div>
             
             <div class="btn-group">
-                <button class="btn btn-secondary" onclick="prevStep()">返回</button>
+                <button class="btn btn-secondary" onclick="prevStep()">Back</button>
                 <button class="btn btn-primary" id="cameraNextBtn" onclick="nextStep()" disabled>Start Calibration</button>
             </div>
         </div>
@@ -909,29 +909,29 @@
                         <video id="videoElement2" autoplay muted playsinline></video>
                         <canvas id="beautifiedCanvas2"></canvas>
                         <canvas id="overlayCanvas2"></canvas>
-                        <div class="video-status" id="videoStatus2">准备校准...</div>
-                        <div class="countdown-overlay" id="countdownOverlay2">准备</div>
+                        <div class="video-status" id="videoStatus2">Ready to calibrate...</div>
+                        <div class="countdown-overlay" id="countdownOverlay2">Ready</div>
                         
                         <div class="beauty-controls">
                             <div class="beauty-toggle">
                                 <div class="beauty-switch" id="beautySwitch2" onclick="toggleBeauty()">
                                     <div class="beauty-switch-knob"></div>
                                 </div>
-                                <span class="beauty-label">美颜</span>
+                                <span class="beauty-label">Beauty</span>
                             </div>
                             
                             <div class="beauty-slider" id="smoothSlider2">
-                                <div class="beauty-slider-label">磨皮</div>
+                                <div class="beauty-slider-label">Smooth</div>
                                 <input type="range" min="0" max="100" value="50" id="smoothRange2" oninput="updateBeauty()">
                             </div>
                             
                             <div class="beauty-slider" id="brightnessSlider2">
-                                <div class="beauty-slider-label">亮度</div>
+                                <div class="beauty-slider-label">Brightness</div>
                                 <input type="range" min="-50" max="50" value="10" id="brightnessRange2" oninput="updateBeauty()">
                             </div>
                             
                             <div class="beauty-slider" id="contrastSlider2">
-                                <div class="beauty-slider-label">对比</div>
+                                <div class="beauty-slider-label">Contrast</div>
                                 <input type="range" min="-50" max="50" value="15" id="contrastRange2" oninput="updateBeauty()">
                             </div>
                         </div>
@@ -943,12 +943,12 @@
                 </div>
                 
                 <div id="calibrationInstructions" class="expression-tips">
-                    保持放松的中性表情，不要微笑或皱眉
+                    Keep a relaxed neutral expression, do not smile or frown
                 </div>
             </div>
             
             <div class="btn-group">
-                <button class="btn btn-secondary" onclick="prevStep()">返回</button>
+                <button class="btn btn-secondary" onclick="prevStep()">Back</button>
                 <button class="btn btn-primary" id="calibrationBtn" onclick="startCalibration()">Start Calibration</button>
             </div>
         </div>
@@ -964,7 +964,7 @@
             </div>
             
             <h2 class="step-title">Expression Training</h2>
-            <p class="step-subtitle" id="trainingSubtitle">跟随指导完成表情练习</p>
+            <p class="step-subtitle" id="trainingSubtitle">Follow the guidance to complete expression practice</p>
             
             <div class="training-content">
                 <div class="video-container">
@@ -972,7 +972,7 @@
                         <video id="videoElement3" autoplay muted playsinline></video>
                         <canvas id="beautifiedCanvas3"></canvas>
                         <canvas id="overlayCanvas3"></canvas>
-                        <div class="video-status" id="videoStatus3">准备训练...</div>
+                        <div class="video-status" id="videoStatus3">Ready to train...</div>
                         <div class="countdown-overlay" id="countdownOverlay3">3</div>
                         
                         <div class="beauty-controls">
@@ -980,21 +980,21 @@
                                 <div class="beauty-switch" id="beautySwitch3" onclick="toggleBeauty()">
                                     <div class="beauty-switch-knob"></div>
                                 </div>
-                                <span class="beauty-label">美颜</span>
+                                <span class="beauty-label">Beauty</span>
                             </div>
                             
                             <div class="beauty-slider" id="smoothSlider3">
-                                <div class="beauty-slider-label">磨皮</div>
+                                <div class="beauty-slider-label">Smooth</div>
                                 <input type="range" min="0" max="100" value="50" id="smoothRange3" oninput="updateBeauty()">
                             </div>
                             
                             <div class="beauty-slider" id="brightnessSlider3">
-                                <div class="beauty-slider-label">亮度</div>
+                                <div class="beauty-slider-label">Brightness</div>
                                 <input type="range" min="-50" max="50" value="10" id="brightnessRange3" oninput="updateBeauty()">
                             </div>
                             
                             <div class="beauty-slider" id="contrastSlider3">
-                                <div class="beauty-slider-label">对比</div>
+                                <div class="beauty-slider-label">Contrast</div>
                                 <input type="range" min="-50" max="50" value="15" id="contrastRange3" oninput="updateBeauty()">
                             </div>
                         </div>
@@ -1009,20 +1009,20 @@
                     <div class="expression-demo" id="expressionDemo">😊</div>
                     <div class="expression-text" id="expressionText">Natural Smile</div>
                     <div class="expression-tips" id="expressionTips">
-                        嘴角自然上扬，保持2秒钟
+                        Naturally lift the corners of your mouth, hold for 2 seconds
                     </div>
                     
                     <div class="btn-group">
-                        <button class="btn btn-secondary" id="skipBtn" onclick="nextExpression()">跳过</button>
-                        <button class="btn btn-primary" id="startTrainingBtn" onclick="startExpression()">开始</button>
+                        <button class="btn btn-secondary" id="skipBtn" onclick="nextExpression()">Skip</button>
+                        <button class="btn btn-primary" id="startTrainingBtn" onclick="startExpression()">Start</button>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- 结果屏幕 -->
+        <!-- Results screen -->
         <div class="step-container" id="resultsStep">
-            <h2 class="step-title">训练结果</h2>
+            <h2 class="step-title">Training Results</h2>
             <p class="step-subtitle" id="resultSubtitle">Your Performance in Film Mode</p>
             
             <div class="results-content">
@@ -1071,7 +1071,7 @@
                 </div>
                 
                 <div class="btn-group">
-                    <button class="btn btn-primary" id="makeShareVideoBtn">🎥 Generate Share Video</button>
+                    <button class="btn btn-primary" id="makeShareVideoBtn">📸 Create Photo Video</button>
                 </div>
                 
                 <div class="btn-group">
@@ -1081,18 +1081,18 @@
             </div>
         </div>
         
-        <!-- 庆祝动画容器 -->
+        <!-- Celebration animation container -->
         <div class="celebration" id="celebrationContainer"></div>
     </div>
 
     <script>
-        // 训练口令配置
+        // Training command configuration
         const TRAINING_COMMANDS = {
             smile_natural: {
                 id: "smile_natural",
                 text: "Please make a natural smile and hold for two seconds",
                 emoji: "😊",
-                tips: "嘴角自然上扬，眼神温和",
+                tips: "Naturally lift the corners of your mouth, gentle eyes",
                 tts: true,
                 duration: 2000,
                 target: "smile",
@@ -1103,7 +1103,7 @@
                 id: "smile_duchenne", 
                 text: "Please make a Duchenne smile and hold for two seconds",
                 emoji: "😄",
-                tips: "眼角微眯，嘴角上扬，真诚快乐",
+                tips: "Eyes slightly squinted, mouth corners up, genuine joy",
                 tts: true,
                 duration: 2000,
                 target: "smile",
@@ -1114,7 +1114,7 @@
                 id: "surprised",
                 text: "Please make a surprised expression",
                 emoji: "😮",
-                tips: "张口瞪眼，眉毛上扬",
+                tips: "Open mouth wide with raised eyebrows",
                 tts: true,
                 duration: 1500,
                 target: "surprised",
@@ -1125,7 +1125,7 @@
                 id: "sad",
                 text: "Please make a sad expression",
                 emoji: "😢",
-                tips: "眉心内收，嘴角下垂",
+                tips: "Furrow brows, mouth corners down",
                 tts: true,
                 duration: 2000,
                 target: "sad",
@@ -1136,7 +1136,7 @@
                 id: "angry",
                 text: "Please make an angry expression",
                 emoji: "😠",
-                tips: "眉毛压低，目光集中",
+                tips: "Lower eyebrows, focused gaze",
                 tts: true,
                 duration: 2000,
                 target: "angry",
@@ -1145,7 +1145,7 @@
             }
         };
 
-        // 全局变量
+        // Global variables
         let faceMesh;
         let camera;
         let currentStep = 0;
@@ -1162,7 +1162,7 @@
         let countdownTimer = null;
         let trainingTimer = null;
         
-        // 美颜相关变量
+        // Beauty filter related variables
         let beautyEnabled = false;
         let beautySettings = {
             smooth: 50,
@@ -1170,12 +1170,12 @@
             contrast: 15
         };
         
-        // DOM 元素获取
+        // DOM element references
         const steps = ['welcomeStep', 'modeStep', 'cameraStep', 'calibrationStep', 'trainingStep'];
         const videoElements = ['videoElement', 'videoElement2', 'videoElement3'];
         const overlayCanvases = ['overlayCanvas', 'overlayCanvas2', 'overlayCanvas3'];
         
-        // MediaPipe 关键点索引
+        // MediaPipe landmark indices
         const LANDMARKS = {
             MOUTH: {
                 LEFT_CORNER: 61,
@@ -1212,19 +1212,19 @@
             NOSE_TIP: 1
         };
 
-        // 步骤导航函数
+        // Step navigation functions
         async function nextStep() {
             if (currentStep < steps.length - 1) {
                 document.getElementById(steps[currentStep]).classList.remove('active');
                 currentStep++;
                 document.getElementById(steps[currentStep]).classList.add('active');
                 
-                // 特殊处理
-                if (currentStep === 2) { // 摄像头准备步骤
+                // Special handling
+                if (currentStep === 2) { // Camera setup step
                     initializeCamera();
-                } else if (currentStep === 3) { // 校准步骤
+                } else if (currentStep === 3) { // Calibration step
                     await setupCalibrationVideo();
-                } else if (currentStep === 4) { // 训练步骤
+                } else if (currentStep === 4) { // Training step
                     await setupTrainingVideo();
                 }
             }
@@ -1238,11 +1238,11 @@
             }
         }
 
-        // 模式选择
+        // Mode selection
         function selectMode(mode) {
             selectedMode = mode;
             
-            // 更新UI
+            // Update UI
             document.querySelectorAll('.mode-card').forEach(card => {
                 card.classList.remove('selected');
             });
@@ -1251,17 +1251,17 @@
             document.getElementById('modeNextBtn').disabled = false;
         }
 
-        // 状态更新
+        // Status update
         function updateStatus(message, type = 'ready') {
             const indicator = document.getElementById('statusIndicator');
             indicator.textContent = message;
             indicator.className = `status-indicator status-${type}`;
         }
 
-        // 摄像头初始化
+        // Camera initialization
         async function initializeCamera() {
             try {
-                updateStatus('启动摄像头...', 'running');
+                updateStatus('Starting camera...', 'running');
                 
                 const stream = await navigator.mediaDevices.getUserMedia({
                     video: { 
@@ -1271,7 +1271,7 @@
                     }
                 });
                 
-                // 为所有视频元素设置流
+                // Set stream for all video elements
                 videoElements.forEach(id => {
                     const video = document.getElementById(id);
                     if (video) {
@@ -1288,12 +1288,12 @@
                 });
                 
                 await initializeFaceMesh();
-                updateStatus('摄像头就绪', 'ready');
+                updateStatus('Camera ready', 'ready');
                 document.getElementById('cameraNextBtn').disabled = false;
                 
             } catch (error) {
-                console.error('摄像头初始化失败:', error);
-                updateStatus('摄像头访问失败', 'error');
+                console.error('Camera initialization failed:', error);
+                updateStatus('Camera access failed', 'error');
             }
         }
 
@@ -1311,7 +1311,7 @@
 
             faceMesh.onResults(onFaceMeshResults);
 
-            // 初始相机设置用于摄像头测试步骤
+            // Initial camera settings for camera test step
             camera = new Camera(document.getElementById('videoElement'), {
                 onFrame: async () => {
                     const video = document.getElementById('videoElement');
@@ -1362,23 +1362,23 @@
         function onFaceMeshResults(results) {
             const now = performance.now();
             
-            // 调试：校准期间MediaPipe是否在工作
-            if (isCalibrating && Math.random() < 0.1) { // 10%概率打印
-                console.log('MediaPipe onFaceMeshResults 被调用，landmarks:', results.multiFaceLandmarks?.length || 0);
+            // Debug: Check if MediaPipe is working during calibration
+            if (isCalibrating && Math.random() < 0.1) { // 10% chance to print
+                console.log('MediaPipe onFaceMeshResults called, landmarks:', results.multiFaceLandmarks?.length || 0);
             }
             
-            // 更新FPS (简化版)
+            // Update FPS (simplified version)
             frameCount++;
             if (now - lastFrameTime >= 1000) {
                 lastFrameTime = now;
                 frameCount = 0;
             }
 
-            // 获取当前活动的canvas
+            // Get current active canvas
             const canvas = getCurrentCanvas();
             if (!canvas) {
                 if (isCalibrating) {
-                    console.error('校准中无法获取当前canvas');
+                    console.error('Unable to get current canvas during calibration');
                 }
                 return;
             }
@@ -1389,32 +1389,32 @@
             if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
                 const landmarks = results.multiFaceLandmarks[0];
                 
-                // 绘制覆盖层
+                // Draw overlay
                 drawOverlay(ctx, landmarks, canvas);
                 
-                // 提取特征
+                // Extract features
                 const metrics = extractMetrics(landmarks);
                 
-                // 收集训练数据
+                // Collect training data
                 if ((isRunning || isCalibrating) && metrics) {
                     metricsBuffer.push({
                         timestamp: now,
                         metrics: metrics
                     });
                     
-                    // 调试信息
+                    // Debug info
                     if (isCalibrating && metricsBuffer.length % 5 === 0) {
                         console.log(`Calibration in progress, collected ${metricsBuffer.length} data points`, metrics);
                     }
                 } else if (isCalibrating) {
-                    // 调试：如果在校准但没有收集到数据
+                    // Debug: If calibrating but no data collected
                     console.log('Calibrating but no valid data collected, metrics:', metrics);
                 }
                 
-                // 更新视频状态
+                // Update video status
                 updateVideoStatus(true);
             } else {
-                // 调试：校准期间未检测到面部
+                // Debug: No face detected during calibration
                 if (isCalibrating) {
                     console.log('No facial landmarks detected during calibration');
                 }
@@ -1433,16 +1433,16 @@
             }
         }
 
-        // 绘制覆盖层
+        // Draw overlay
         function drawOverlay(ctx, landmarks, canvas) {
             ctx.strokeStyle = '#4ecdc4';
             ctx.lineWidth = 2;
 
-            // 绘制嘴部轮廓
+            // Draw mouth outline
             drawLandmarkContour(ctx, LANDMARKS.MOUTH.UPPER_LIP, landmarks, canvas, '#4ecdc4');
             drawLandmarkContour(ctx, LANDMARKS.MOUTH.LOWER_LIP, landmarks, canvas, '#4ecdc4');
 
-            // 绘制眼部轮廓
+            // Draw eye outline
             drawLandmarkContour(ctx, LANDMARKS.LEFT_EYE.OUTLINE, landmarks, canvas, '#45b7d1');
             drawLandmarkContour(ctx, LANDMARKS.RIGHT_EYE.OUTLINE, landmarks, canvas, '#45b7d1');
         }
@@ -1473,7 +1473,7 @@
             ctx.stroke();
         }
 
-        // 特征提取 (简化版)
+        // Feature extraction (simplified version)
         function extractMetrics(landmarks) {
             if (!landmarks || landmarks.length < 468) return null;
 
@@ -1509,25 +1509,25 @@
                     eyeEAR,
                     symMouth: 1 - Math.min(1, Math.abs(mouth.leftCorner.y - mouth.rightCorner.y) * 1000),
                     poseYawProxy: 1 - Math.min(1, Math.abs(landmarks[LANDMARKS.NOSE_TIP].x - 0.5) * 2),
-                    illumScore: 0.8 // 简化
+                    illumScore: 0.8 // Simplified
                 };
             } catch (error) {
-                console.error('特征提取失败:', error);
+                console.error('Feature extraction failed:', error);
                 return null;
             }
         }
 
-        // 校准功能
+        // Calibration function
         async function setupCalibrationVideo() {
-            // 校准页面视频设置
-            document.getElementById('calibrationInstructions').textContent = '保持放松的中性表情，不要微笑或皱眉';
+            // Calibration page video setup
+            document.getElementById('calibrationInstructions').textContent = 'Keep a relaxed neutral expression, do not smile or frown';
             
-            // 强制重启相机并绑定到校准视频元素
+            // Force restart camera and bind to calibration video element
             if (camera) {
                 camera.stop();
             }
             
-            // 为校准步骤重新创建相机
+            // Recreate camera for calibration step
             camera = new Camera(document.getElementById('videoElement2'), {
                 onFrame: async () => {
                     const video = document.getElementById('videoElement2');
@@ -1537,7 +1537,7 @@
                         }
                         await faceMesh.send({image: video});
                     } else if (isCalibrating) {
-                        console.warn('校准中视频元素未准备好:', video ? 'no width' : 'no video');
+                        console.warn('Video element not ready during calibration:', video ? 'no width' : 'no video');
                     }
                 },
                 width: 640,
@@ -1554,16 +1554,16 @@
             if (isCalibrating) return;
             
             console.log('Starting calibration process...');
-            console.log('MediaPipe状态 - faceMesh:', !!faceMesh, 'camera:', !!camera);
-            console.log('当前视频元素状态:', document.getElementById('videoElement2')?.videoWidth || 'N/A');
+            console.log('MediaPipe status - faceMesh:', !!faceMesh, 'camera:', !!camera);
+            console.log('Current video element status:', document.getElementById('videoElement2')?.videoWidth || 'N/A');
             
             isCalibrating = true;
             metricsBuffer = [];
             
             document.getElementById('calibrationBtn').disabled = true;
-            updateStatus('校准中...', 'running');
+            updateStatus('Calibrating...', 'running');
             
-            // 倒计时
+            // Countdown
             let countdown = 3;
             const countdownElement = document.getElementById('countdownOverlay2');
             const progressElement = document.getElementById('calibrationProgress');
@@ -1576,10 +1576,10 @@
                 if (countdown > 0) {
                     countdownElement.textContent = countdown;
                 } else {
-                    countdownElement.textContent = '开始';
+                    countdownElement.textContent = 'Start';
                     clearInterval(countdownInterval);
                     
-                    // 开始校准
+                    // Start calibration
                     setTimeout(() => {
                         countdownElement.classList.remove('show');
                         startCalibrationCapture();
@@ -1616,9 +1616,9 @@
             if (metricsBuffer.length > 0) {
                 baseline = calculateBaseline(metricsBuffer);
                 console.log('Calculated baseline data:', baseline);
-                updateStatus('校准完成', 'ready');
+                updateStatus('Calibration completed', 'ready');
                 
-                // 显示成功并自动进入下一步
+                // Show success and auto proceed to next step
                 document.getElementById('calibrationInstructions').innerHTML = 
                     '✅ Calibration successful! Established your personal facial baseline<br>You can now start expression training';
                 
@@ -1627,8 +1627,8 @@
                 }, 2000);
                 
             } else {
-                console.error('校准失败：未收集到面部数据');
-                updateStatus('校准失败', 'error');
+                console.error('Calibration failed: No facial data collected');
+                updateStatus('Calibration failed', 'error');
                 document.getElementById('calibrationBtn').disabled = false;
                 document.getElementById('calibrationInstructions').textContent = 'No face detected, please retry calibration';
             }
@@ -1647,14 +1647,14 @@
             };
         }
 
-        // 训练功能
+        // Training function
         async function setupTrainingVideo() {
-            // 训练页面视频设置 - 为训练步骤重新创建相机
+            // Training page video setup - recreate camera for training step
             if (camera) {
                 camera.stop();
             }
             
-            // 为训练步骤重新创建相机
+            // Recreate camera for training step
             camera = new Camera(document.getElementById('videoElement3'), {
                 onFrame: async () => {
                     const video = document.getElementById('videoElement3');
@@ -1675,17 +1675,17 @@
             const command = TRAINING_COMMANDS[commandId];
             
             if (!command) {
-                // 训练完成，显示结果
+                // Training completed, show results
                 showFinalResults();
                 return;
             }
             
             document.getElementById('expressionDemo').textContent = command.emoji;
-            document.getElementById('expressionText').textContent = command.text.replace('请做', '').replace('并保持两秒', '').replace('并保持一秒半', '');
+            document.getElementById('expressionText').textContent = command.text.replace('Please make a ', '').replace(' and hold for two seconds', '').replace(' and hold for one and a half seconds', '');
             document.getElementById('expressionTips').textContent = command.tips;
-            document.getElementById('trainingSubtitle').textContent = `表情 ${currentExpressionIndex + 1}/${trainingSequence.length}: ${command.text.replace('请做', '').replace('并保持两秒', '').replace('并保持一秒半', '')}`;
+            document.getElementById('trainingSubtitle').textContent = `Expression ${currentExpressionIndex + 1}/${trainingSequence.length}: ${command.text.replace('Please make a ', '').replace(' and hold for two seconds', '').replace(' and hold for one and a half seconds', '')}`;
             
-            // 重置按钮状态
+            // Reset button state
             document.getElementById('startTrainingBtn').disabled = false;
             document.getElementById('startTrainingBtn').textContent = 'Start';
         }
@@ -1693,9 +1693,9 @@
         function startExpression() {
             if (isRunning) return;
             
-            // 第一次开始训练时启动录制
-            if (currentExpressionIndex === 0 && (!recorder || recorder.state === 'inactive')) {
-                startRecording();
+            // Initialize photo capture function when starting training for the first time
+            if (currentExpressionIndex === 0) {
+                initPhotoCapture();
             }
             
             const commandId = trainingSequence[currentExpressionIndex];
@@ -1708,13 +1708,13 @@
             document.getElementById('skipBtn').disabled = true;
             updateStatus('Training...', 'running');
             
-            // TTS 播报
+            // TTS playback
             if (command.tts && 'speechSynthesis' in window) {
                 const utterance = new SpeechSynthesisUtterance(command.text);
                 speechSynthesis.speak(utterance);
             }
             
-            // 倒计时
+            // Countdown
             let countdown = 3;
             const countdownElement = document.getElementById('countdownOverlay3');
             countdownElement.textContent = countdown;
@@ -1725,7 +1725,7 @@
                 if (countdown > 0) {
                     countdownElement.textContent = countdown;
                 } else {
-                    countdownElement.textContent = '开始!';
+                    countdownElement.textContent = 'Start!';
                     clearInterval(countdownTimer);
                     
                     setTimeout(() => {
@@ -1766,13 +1766,16 @@
             isRunning = false;
             currentSession.endTime = performance.now();
             
-            // 分析这次表情的结果
+            // Capture photo of current expression
+            capturePhoto();
+            
+            // Analyze results of this expression
             if (metricsBuffer.length > 0) {
                 const result = analyzeExpression();
                 showExpressionResult(result);
             }
             
-            // 准备下一个表情或完成训练
+            // Prepare next expression or complete training
             setTimeout(() => {
                 currentExpressionIndex++;
                 if (currentExpressionIndex < trainingSequence.length) {
@@ -1813,7 +1816,7 @@
                 symMouth: average(validMetrics.map(m => m.symMouth))
             };
             
-            // 简化评分
+            // Simplified scoring
             const scores = calculateSimpleScores(avgMetrics, currentSession.command.target);
             
             return {
@@ -1825,7 +1828,7 @@
         function calculateSimpleScores(metrics, target) {
             let match = 50;
             
-            // 根据表情类型计算匹配度
+            // Calculate match score based on expression type
             switch (target) {
                 case 'smile':
                     const smileIntensity = baseline ? 
@@ -1860,7 +1863,7 @@
             
             const avgScore = (result.scores.clarity + result.scores.consistency + result.scores.intensity + result.scores.truth) / 4;
             
-            // 更新表情指导区域显示结果
+            // Update expression guidance area to show results
             document.getElementById('expressionDemo').textContent = avgScore > 80 ? '🎉' : avgScore > 60 ? '👍' : '💪';
             document.getElementById('expressionText').textContent = avgScore > 80 ? 'Excellent!' : avgScore > 60 ? 'Good!' : 'Keep trying!';
             document.getElementById('expressionTips').innerHTML = `
@@ -1868,19 +1871,19 @@
                 Intensity: ${result.scores.intensity} | Truth: ${result.scores.truth}
             `;
             
-            // 如果表现优秀，播放庆祝动画
+            // If performance is excellent, play celebration animation
             if (avgScore > 85) {
                 showCelebration();
             }
             
-            updateStatus('表情完成', 'ready');
+            updateStatus('Expression completed', 'ready');
             document.getElementById('skipBtn').disabled = false;
         }
 
         function showCelebration() {
             const container = document.getElementById('celebrationContainer');
             
-            // 创建彩带效果
+            // Create ribbon effect
             for (let i = 0; i < 20; i++) {
                 const confetti = document.createElement('div');
                 confetti.className = 'confetti';
@@ -1894,14 +1897,14 @@
         }
 
         function showFinalResults() {
-            // 训练结束，停止录制但不跳转
-            stopRecordingOnly();
+            // Training ended, save photos but don't redirect
+            savePhotosOnly();
             
-            // 切换到结果页面
+            // Switch to results page
             document.getElementById('trainingStep').classList.remove('active');
             document.getElementById('resultsStep').classList.add('active');
             
-            // 更新结果数据 (模拟数据)
+            // Update results data (simulated data)
             const results = {
                 clarity: 78 + Math.floor(Math.random() * 20),
                 consistency: 82 + Math.floor(Math.random() * 15),
@@ -1915,19 +1918,19 @@
         }
 
         function updateResultsDisplay(results) {
-            // 更新分数显示
+            // Update score display
             document.getElementById('clarityValue').textContent = results.clarity;
             document.getElementById('consistencyValue').textContent = results.consistency;
             document.getElementById('intensityValue').textContent = results.intensity;
             document.getElementById('truthValue').textContent = results.truth;
             
-            // 更新分数卡片样式
+            // Update score card styles
             updateScoreCard('clarityCard', results.clarity);
             updateScoreCard('consistencyCard', results.consistency);
             updateScoreCard('intensityCard', results.intensity);
             updateScoreCard('truthCard', results.truth);
             
-            // 更新模式显示
+            // Update mode display
             document.getElementById('resultSubtitle').textContent = 
                 `Your Performance in ${selectedMode === 'film' ? 'Film' : 'Stage'} Mode`;
         }
@@ -1976,18 +1979,18 @@
             if (results.intensity > 85 && selectedMode === 'film') {
                 feedback.push({
                     icon: '🎬',
-                    text: '影视表演中过度夸张可能显得不自然，适当收敛会更好。'
+                    text: 'In film acting, being overly exaggerated may seem unnatural. Appropriate restraint would be better.'
                 });
             }
             
             if (results.truth < 75) {
                 feedback.push({
                     icon: '💫',
-                    text: '表情的真实感有待提高，试着从内心感受情绪。'
+                    text: 'The authenticity of your expression needs improvement. Try to feel the emotion from within.'
                 });
             }
             
-            // 显示反馈
+            // Show feedback
             const container = document.getElementById('feedbackContainer');
             container.innerHTML = '';
             
@@ -2002,51 +2005,50 @@
             });
         }
 
-        // 重新开始训练
+        // Restart training
         function restartTraining() {
             currentExpressionIndex = 0;
             currentStep = 0;
             selectedMode = null;
             baseline = null;
             
-            // 重置录制状态
-            if (recorder && recorder.state !== 'inactive') {
-                recorder.stop();
+            // Reset photo capture state
+            capturedPhotos = [];
+            if (photoCanvas) {
+                photoCanvas = null;
             }
-            recorder = null;
-            recordedChunks = [];
             
-            // 重置UI
+            // Reset UI
             document.getElementById('resultsStep').classList.remove('active');
             document.getElementById('welcomeStep').classList.add('active');
             
-            // 重置模式选择
+            // Reset mode selection
             document.querySelectorAll('.mode-card').forEach(card => {
                 card.classList.remove('selected');
             });
             document.getElementById('modeNextBtn').disabled = true;
             
-            updateStatus('重新开始', 'ready');
+            updateStatus('Restart', 'ready');
         }
 
-        // 继续训练
+        // Continue training
         function continueTraining() {
             currentExpressionIndex = 0;
             
-            // 回到训练步骤
+            // Return to training step
             document.getElementById('resultsStep').classList.remove('active');
             document.getElementById('trainingStep').classList.add('active');
             currentStep = 4;
             
             loadCurrentExpression();
-            updateStatus('继续训练', 'ready');
+            updateStatus('Continue training', 'ready');
         }
 
-        // 美颜功能函数
+        // Beauty filter functions
         function toggleBeauty() {
             beautyEnabled = !beautyEnabled;
             
-            // 只更新美颜开关的状态，不影响镜像开关
+            // Only update beauty filter switch state, don't affect mirror switch
             const beautySwitch = document.getElementById('beautySwitch');
             if (beautySwitch) {
                 if (beautyEnabled) {
@@ -2056,7 +2058,7 @@
                 }
             }
             
-            // 显示/隐藏滑块
+            // Show/hide sliders
             document.querySelectorAll('.beauty-slider').forEach(slider => {
                 if (beautyEnabled) {
                     slider.classList.add('active');
@@ -2072,7 +2074,7 @@
         function updateBeauty() {
             if (!beautyEnabled) return;
             
-            // 获取当前激活步骤的滑块值
+            // Get current active step slider values
             const activeStep = document.querySelector('.step-container.active');
             if (activeStep) {
                 const smoothRange = activeStep.querySelector('[id*="smoothRange"]');
@@ -2087,7 +2089,7 @@
         
         function applyBeautyFilter(sourceCanvas, targetCanvas) {
             if (!beautyEnabled) {
-                // 如果美颜关闭，直接复制原图
+                // If beauty filter is off, directly copy original image
                 const sourceCtx = sourceCanvas.getContext('2d');
                 const targetCtx = targetCanvas.getContext('2d');
                 targetCtx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
@@ -2098,17 +2100,17 @@
             const sourceCtx = sourceCanvas.getContext('2d');
             const targetCtx = targetCanvas.getContext('2d');
             
-            // 获取图像数据
+            // Get image data
             const imageData = sourceCtx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
             const data = imageData.data;
             
-            // 应用美颜效果
+            // Apply beauty effects
             for (let i = 0; i < data.length; i += 4) {
                 let r = data[i];
                 let g = data[i + 1];
                 let b = data[i + 2];
                 
-                // 磨皮效果 (简化版高斯模糊)
+                // Smoothing effect (simplified Gaussian blur)
                 if (beautySettings.smooth > 0) {
                     const smoothFactor = beautySettings.smooth / 100 * 0.3;
                     r = r + (128 - r) * smoothFactor;
@@ -2116,13 +2118,13 @@
                     b = b + (128 - b) * smoothFactor;
                 }
                 
-                // 亮度调整
+                // Brightness adjustment
                 const brightnessFactor = beautySettings.brightness / 50;
                 r = Math.max(0, Math.min(255, r + brightnessFactor * 30));
                 g = Math.max(0, Math.min(255, g + brightnessFactor * 30));
                 b = Math.max(0, Math.min(255, b + brightnessFactor * 30));
                 
-                // 对比度调整
+                // Contrast adjustment
                 const contrastFactor = (beautySettings.contrast + 50) / 50;
                 r = Math.max(0, Math.min(255, (r - 128) * contrastFactor + 128));
                 g = Math.max(0, Math.min(255, (g - 128) * contrastFactor + 128));
@@ -2133,7 +2135,7 @@
                 data[i + 2] = b;
             }
             
-            // 将处理后的数据绘制到目标画布
+            // Draw processed data to target canvas
             targetCtx.putImageData(imageData, 0, 0);
         }
         
@@ -2141,9 +2143,9 @@
             const activeStep = document.querySelector('.step-container.active');
             if (!activeStep) return;
             
-            // 调试信息
-            if (isCalibrating && Math.random() < 0.01) { // 1%概率打印，避免日志过多
-                console.log('renderBeautifiedVideo运行中，activeStep:', activeStep.id);
+            // Debug info
+            if (isCalibrating && Math.random() < 0.01) { // 1% chance to print, avoid too many logs
+                console.log('renderBeautifiedVideo running, activeStep:', activeStep.id);
             }
             
             const video = activeStep.querySelector('video');
@@ -2154,7 +2156,7 @@
                 return;
             }
             
-            // 设置画布尺寸
+            // Set canvas size
             if (beautifiedCanvas.width !== video.videoWidth) {
                 beautifiedCanvas.width = video.videoWidth;
                 beautifiedCanvas.height = video.videoHeight;
@@ -2163,93 +2165,118 @@
             const ctx = beautifiedCanvas.getContext('2d');
             
             if (beautyEnabled) {
-                // 先绘制视频帧到临时画布
+                // First draw video frame to temporary canvas
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = video.videoWidth;
                 tempCanvas.height = video.videoHeight;
                 const tempCtx = tempCanvas.getContext('2d');
                 tempCtx.drawImage(video, 0, 0);
                 
-                // 应用美颜滤镜
+                // Apply beauty filter
                 applyBeautyFilter(tempCanvas, beautifiedCanvas);
             } else {
-                // 直接绘制原始视频
+                // Directly draw original video
                 ctx.drawImage(video, 0, 0);
             }
             
-            // 继续下一帧
+            // Continue to next frame
             requestAnimationFrame(renderBeautifiedVideo);
         }
 
         // === Recording state ===
-        let recorder, recordedChunks = [];
+        // Photo capture related variables
+        let capturedPhotos = [];
+        let photoCanvas = null;
         let mixedStream;
 
-        // 如果需要采集麦克风，请将此项设为 true（默认 false 仅录画面）
+        // If microphone capture is needed, set this to true (default false for video only)
         const ENABLE_MIC = false;
 
-        // 用美颜后的画布作为视频源（与页面一致：#beautifiedCanvas3）
+        // Use beautified canvas as video source (consistent with page: #beautifiedCanvas3)
         function getCanvasStream() {
             const canvas = document.getElementById('beautifiedCanvas3');
-            // 30fps 可按需调整
+            // 30fps, adjustable as needed
             return canvas.captureStream(30);
         }
 
-        async function startRecording() {
-            // 画面流
-            const canvasStream = getCanvasStream();
-
-            // 可选：合并麦克风音频（移动端需要 HTTPS+手势触发）
-            if (ENABLE_MIC) {
-                const mic = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mixedStream = new MediaStream([
-                    ...canvasStream.getVideoTracks(),
-                    ...mic.getAudioTracks()
-                ]);
-            } else {
-                mixedStream = canvasStream;
+        function initPhotoCapture() {
+            // Initialize photo capture function
+            capturedPhotos = [];
+            if (!photoCanvas) {
+                photoCanvas = document.createElement('canvas');
             }
-
-            recordedChunks = [];
-            recorder = new MediaRecorder(mixedStream, { mimeType: 'video/webm; codecs=vp9,opus' });
-            recorder.ondataavailable = e => { if (e.data.size > 0) recordedChunks.push(e.data); };
-            recorder.onstop = async () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                // 存到 sessionStorage，供用户选择时读取
-                const b64 = await blobToBase64(blob);
-                sessionStorage.setItem('lastTrainingVideo_b64', b64);
-                
-                // 检查是否需要跳转
-                if (window.shouldJumpToVideo) {
-                    window.shouldJumpToVideo = false;
-                    window.location.href = 'video-share.html';
-                } else {
-                    console.log('Training video saved, waiting for user choice to share');
-                }
+            console.log('Photo capture initialized');
+        }
+        
+        function capturePhoto() {
+            console.log('=== Starting photo capture ===');
+            console.log('Current expression index:', currentExpressionIndex);
+            console.log('Training sequence:', trainingSequence);
+            console.log('Current expression ID:', trainingSequence[currentExpressionIndex]);
+            
+            // Get video element from current step
+            const videoElement = document.getElementById('videoElement3');
+            
+            if (!videoElement) {
+                console.warn('Video element videoElement3 not found');
+                return null;
+            }
+            
+            if (videoElement.videoWidth === 0) {
+                console.warn('Video not loaded yet, width is 0');
+                return null;
+            }
+            
+            console.log('Video element ready, capturing photo...');
+            
+            // Set canvas size to match video
+            photoCanvas.width = videoElement.videoWidth;
+            photoCanvas.height = videoElement.videoHeight;
+            
+            const ctx = photoCanvas.getContext('2d');
+            
+            // Draw video frame to canvas (flip horizontally for mirror effect)
+            ctx.save();
+            ctx.scale(-1, 1);
+            ctx.drawImage(videoElement, -photoCanvas.width, 0);
+            ctx.restore();
+            
+            // Convert to base64
+            const photoDataUrl = photoCanvas.toDataURL('image/jpeg', 0.85);
+            
+            // Store photo with expression info
+            const photoData = {
+                dataUrl: photoDataUrl,
+                expressionIndex: currentExpressionIndex,
+                expressionId: trainingSequence[currentExpressionIndex],
+                expressionName: TRAINING_COMMANDS[trainingSequence[currentExpressionIndex]].text,
+                timestamp: Date.now()
             };
-            recorder.start();
+            
+            capturedPhotos.push(photoData);
+            console.log(`✅ Photo captured! Expression ${currentExpressionIndex}:`, trainingSequence[currentExpressionIndex]);
+            console.log('Total photos captured:', capturedPhotos.length);
+            console.log('Photo data size:', photoDataUrl.length, 'characters');
+            
+            return photoData;
         }
 
-        function stopRecordingAndJump() {
-            // 停止录制并跳转到分享页面
-            if (recorder && recorder.state !== 'inactive') {
-                // 临时设置跳转标志
-                window.shouldJumpToVideo = true;
-                recorder.stop();
+        function generateVideoFromPhotos() {
+            // Save photo data to sessionStorage, redirect to share page
+            if (capturedPhotos.length > 0) {
+                sessionStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
+                console.log(`Saved ${capturedPhotos.length} photos to sessionStorage`);
+                window.location.href = 'video-share-en.html';
             } else {
-                // 没有录制视频，检查是否有之前保存的视频
-                if (sessionStorage.getItem('lastTrainingVideo_b64')) {
-                    window.location.href = 'video-share.html';
-                } else {
-                    alert('No video recorded, please try training again');
-                }
+                alert('No photos captured, please try training again');
             }
         }
         
-        function stopRecordingOnly() {
-            // 只停止录制，不跳转
-            if (recorder && recorder.state !== 'inactive') {
-                recorder.stop();
+        function savePhotosOnly() {
+            // Only save photos, don't redirect
+            if (capturedPhotos.length > 0) {
+                sessionStorage.setItem('capturedPhotos', JSON.stringify(capturedPhotos));
+                console.log(`Training completed, saved ${capturedPhotos.length} photos`);
             }
         }
 
@@ -2261,23 +2288,23 @@
             });
         }
 
-        // === 将录制与"训练开始/结束"绑定 ===
-        // 当用户点击"Start"开始某个表情训练时开始录制；当训练序列全部完成进入 results 时停止录制。
-        // 如果你的代码里已有训练状态机，请在合适的起止钩子里调用：startRecording() / stopRecordingAndGo()。
-        // 暂时提供最小实现：当点击开始训练按钮时开启；当显示结果页（#resultsStep）时停止。
+        // === Bind recording to "training start/end" ===
+        // Start recording when user clicks "Start" to begin expression training; stop recording when training sequence completes and enters results.
+        // If you already have training state machine in your code, please call at appropriate start/stop hooks: startRecording() / stopRecordingAndGo().
+        // Temporary minimal implementation: start when clicking start training button; stop when showing results page (#resultsStep).
         (function wireRecording() {
-            // 开始按钮（英文页 id='startTrainingBtn'；中文页一致或名为"开始"按钮）：
+            // Start button (English page id='startTrainingBtn'; Chinese page consistent or named "Start" button):
             const startBtn = document.getElementById('startTrainingBtn');
             if (startBtn) {
                 startBtn.addEventListener('click', () => {
-                    // 防多次启动
+                    // Prevent multiple starts
                     if (!recorder || recorder.state === 'inactive') {
                         startRecording();
                     }
                 }, { once: false });
             }
 
-            // 注释掉自动跳转，让用户自己决定是否生成视频
+            // Comment out auto redirect, let user decide whether to generate video
             // const resultsStep = document.getElementById('resultsStep');
             // const observer = new MutationObserver(() => {
             //     if (resultsStep.classList.contains('active')) {
@@ -2286,20 +2313,20 @@
             // });
             // if (resultsStep) observer.observe(resultsStep, { attributes: true, attributeFilter: ['class'] });
 
-            // 分享视频按钮事件
+            // Share video button event
             const shareBtn = document.getElementById('makeShareVideoBtn');
             if (shareBtn) {
                 shareBtn.addEventListener('click', () => {
-                    // 用户主动选择生成分享视频
-                    stopRecordingAndJump();
+                    // User actively chooses to generate share video
+                    generateVideoFromPhotos();
                 });
             }
         })();
 
-        // 初始化
+        // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             updateStatus('Welcome to Facial Expression Coach', 'ready');
-            // 启动美颜渲染循环
+            // Start beauty rendering loop
             renderBeautifiedVideo();
         });
     </script>
