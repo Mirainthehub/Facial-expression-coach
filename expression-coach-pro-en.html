@@ -57,7 +57,21 @@
             border-radius: 20px;
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
+        .lang-switch {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.12);
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-decoration: none;
+            color: #fff;
+        }
+        .lang-switch:hover { border-color: #4ecdc4; }
         
         .progress-section {
             display: flex;
@@ -430,6 +444,7 @@
     <div class="app-container">
         <!-- Header -->
         <div class="header">
+            <a class="lang-switch" href="./expression-coach-pro.html">中文</a>
             <div class="progress-section">
                 <div class="total-score" id="totalScore">0</div>
                 <div class="progress-bar">

@@ -30,10 +30,11 @@
 
 ## 🚀 快速开始
 
-### 在线体验
+-### 在线体验
 - **中文版**: [Live Demo](https://mirainthehub.github.io/Facial-expression-coach/) 立即开始训练
 - **English**: [English Version](https://mirainthehub.github.io/Facial-expression-coach/index-en.html) Start training now
-- **专业版表情训练**: [Expression Coach Pro](https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro.html)
+- **专业版表情训练（中文）**: [Expression Coach Pro (CN)](https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro.html)
+- **Expression Coach Pro (EN)**: [English Pro Page](https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro-en.html)
 - **京剧旦角训练**: [Peking Opera Dan Coach](https://mirainthehub.github.io/Facial-expression-coach/peking-opera-dan.html)
 
 ### 扩展版本说明
@@ -54,7 +55,8 @@
 - 算法要点（基于 MediaPipe FaceMesh 实时关键点）：
   - mouthRatio、mouthOpen、eyeEAR、browActivity、symMouth、poseYawProxy、illumScore 等特征
 - 使用步骤：Quick Calibrate → 选择训练口令 → Start Training → 查看四维评分与建议
-- 在线体验：https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro.html
+- 在线体验（中文）：https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro.html
+- Live (English): https://mirainthehub.github.io/Facial-expression-coach/expression-coach-pro-en.html
 
 #### 京剧旦角训练（Opera Dan）
 - 适用场景：戏曲表演训练（旦/青衣等），强调眼神、眉目配合与身段的"程式化"表达。
