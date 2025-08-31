@@ -312,6 +312,34 @@
             line-height: 1.4;
             border-left: 4px solid #4ecdc4;
         }
+
+        /* Script Guide */
+        .script-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 14px;
+            border-radius: 10px;
+            border-left: 4px solid #feca57;
+        }
+        .script-meta {
+            font-size: 12px;
+            opacity: 0.85;
+            margin-bottom: 8px;
+            color: #feca57;
+            font-weight: 600;
+        }
+        .script-excerpt {
+            font-size: 15px;
+            margin-bottom: 8px;
+        }
+        .script-note {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        .script-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
         
         /* Results Section */
         .results {
@@ -502,6 +530,21 @@
             <div id="tipsContainer">
                 <div class="tip-item">准备开始训练，选择表演模式和目标表情</div>
             </div>
+
+            <div class="tips-title" style="margin-top:16px;">
+                <span>📜</span>
+                <span>剧本引导</span>
+            </div>
+            <div id="scriptGuideContainer" class="script-item">
+                <div id="scriptMeta" class="script-meta">红楼梦 · 场景预设 · 角色</div>
+                <div id="scriptExcerpt" class="script-excerpt">选择目标表情后，将为你呈现一段对应的红楼梦场景台词或意境提示。</div>
+                <div id="scriptNote" class="script-note">提示：先用心进入角色，再让表情自然到位。</div>
+                <div class="script-actions">
+                    <button id="prevScriptBtn" class="btn-secondary">上一条</button>
+                    <button id="nextScriptBtn" class="btn-secondary">换一条</button>
+                    <button id="ttsScriptBtn" class="btn-secondary">朗读台词</button>
+                </div>
+            </div>
         </div>
         
         <!-- Results Section -->
@@ -654,12 +697,102 @@
         let metricsBuffer = [];
         let lastFrameTime = 0;
         let frameCount = 0;
+        let scriptIndices = {}; // 剧本索引（按target存储）
+
+        // 红楼梦·剧本引导素材（精简、公版）
+        const SCRIPT_GUIDES = {
+            smile: [
+                {
+                    work: '红楼梦', role: '贾宝玉', scene: '怡红院小叙',
+                    excerpt: '见黛玉言笑晏晏，心下喜欢，唇畔不禁含笑。',
+                    coaching: '自然笑：嘴角轻提，眼角随之微弯，呼吸柔和。'
+                },
+                {
+                    work: '红楼梦', role: '林黛玉', scene: '与宝钗相对',
+                    excerpt: '见宝钗言语温润，心下释然，眉目间露出会心一笑。',
+                    coaching: 'Duchenne：让笑意从眼底生起，再到嘴角。'
+                }
+            ],
+            neutral: [
+                {
+                    work: '红楼梦', role: '薛宝钗', scene: '坐听闲话',
+                    excerpt: '神色安然，端庄自持，不喜不怒，清润如玉。',
+                    coaching: '中性：放松下颌与眉心，目光稳定，呼吸匀。'
+                },
+                {
+                    work: '红楼梦', role: '贾母', scene: '厅前安坐',
+                    excerpt: '从容端坐，和气含光，容色不动如常。',
+                    coaching: '镜头前保持静定之气，细微表情尽量平。'
+                }
+            ],
+            focus: [
+                {
+                    work: '红楼梦', role: '林黛玉', scene: '葬花作诗',
+                    excerpt: '黛玉俯身拾花，凝神细看，字字推敲。',
+                    coaching: '专注：微收下眼睑，额面放松，目光聚焦一点。'
+                },
+                {
+                    work: '红楼梦', role: '薛宝钗', scene: '抄经刺绣',
+                    excerpt: '气息沉着，手稳眼定，不分心。',
+                    coaching: '收小动作，轻闭唇，鼻息细匀，心手合一。'
+                }
+            ],
+            surprised: [
+                {
+                    work: '红楼梦', role: '贾宝玉', scene: '初见黛玉',
+                    excerpt: '见黛玉行来，顿觉心动，目光微张，神情一怔。',
+                    coaching: '惊讶：眉轻上提，下颌微松，吸气自然入。'
+                },
+                {
+                    work: '红楼梦', role: '王熙凤', scene: '闻变',
+                    excerpt: '闻说内宅有异，忙回首张望，神色一震。',
+                    coaching: '瞬时提眉开目，再迅速收稳，避免过度。'
+                }
+            ],
+            sad: [
+                {
+                    work: '红楼梦', role: '林黛玉', scene: '葬花词',
+                    excerpt: '花谢花飞飞满天，红消香断有谁怜。',
+                    coaching: '悲伤：眉心轻蹙，嘴角略收，视线下垂，气息浅。'
+                },
+                {
+                    work: '红楼梦', role: '史湘云', scene: '枕石泣涟',
+                    excerpt: '独倚石畔，泪痕未干，强自含笑终难。',
+                    coaching: '克制的悲：情在内，形在微，避免夸张抽泣。'
+                }
+            ],
+            disgust: [
+                {
+                    work: '红楼梦', role: '林黛玉', scene: '嫌俗',
+                    excerpt: '闻俗言笑，转面不语，鼻翼微收，唇角微抿。',
+                    coaching: '厌恶：上唇轻提，鼻翼微皱，幅度适中更可信。'
+                },
+                {
+                    work: '红楼梦', role: '贾宝玉', scene: '厌仕途经济',
+                    excerpt: '每闻功名之谈，辄不耐烦，转开话头。',
+                    coaching: '更偏情绪的嫌弃：目光侧避，口角内收一点。'
+                }
+            ],
+            angry: [
+                {
+                    work: '红楼梦', role: '王熙凤', scene: '治家震怒',
+                    excerpt: '凤姐沉眉冷目，叱责有声，众皆噤若寒蝉。',
+                    coaching: '愤怒：眉压低，目光定，呼气用力但面部不乱。'
+                },
+                {
+                    work: '红楼梦', role: '探春', scene: '理家不屈',
+                    excerpt: '言辞峻厉而不失分寸，神色坚决。',
+                    coaching: '克制的怒：紧收下颌，眉压而眼稳，力度在内。'
+                }
+            ]
+        };
 
         // 初始化应用
         document.addEventListener('DOMContentLoaded', async () => {
             await initializeCamera();
             setupEventListeners();
             updateUI();
+            updateScriptGuide();
         });
 
         // 设置事件监听器
@@ -680,7 +813,18 @@
             document.getElementById('calibrateBtn').addEventListener('click', quickCalibrate);
 
             // 口令选择
-            document.getElementById('commandSelect').addEventListener('change', updateUI);
+            document.getElementById('commandSelect').addEventListener('change', () => {
+                updateUI();
+                updateScriptGuide();
+            });
+
+            // 剧本引导按钮
+            const nextBtn = document.getElementById('nextScriptBtn');
+            const prevBtn = document.getElementById('prevScriptBtn');
+            const ttsBtn = document.getElementById('ttsScriptBtn');
+            if (nextBtn) nextBtn.addEventListener('click', () => cycleScript(1));
+            if (prevBtn) prevBtn.addEventListener('click', () => cycleScript(-1));
+            if (ttsBtn) ttsBtn.addEventListener('click', speakCurrentScript);
         }
 
         // 初始化摄像头和MediaPipe
@@ -1262,11 +1406,14 @@
             document.getElementById('startBtn').disabled = true;
             document.getElementById('currentCommand').textContent = command.text;
             
-            // TTS播报
-            if (command.tts && 'speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(command.text);
-                utterance.lang = 'zh-CN';
-                speechSynthesis.speak(utterance);
+            // 自动播报：先播报剧本台词，再播报训练口令
+            try {
+                await speakCurrentScriptAsync();
+                if (command.tts) {
+                    await ttsSpeak(command.text);
+                }
+            } catch (e) {
+                // 忽略TTS错误，继续流程
             }
             
             // 倒计时
@@ -1286,6 +1433,32 @@
             
             // 显示倒计时
             showTrainingCountdown(command.duration);
+        }
+
+        // 基础TTS，返回Promise用于串联
+        function ttsSpeak(text, opts = {}) {
+            return new Promise((resolve) => {
+                if (!('speechSynthesis' in window) || !text) return resolve();
+                try { window.speechSynthesis.cancel(); } catch (e) {}
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = opts.lang || 'zh-CN';
+                if (opts.rate) u.rate = opts.rate;
+                if (opts.pitch) u.pitch = opts.pitch;
+                if (opts.volume) u.volume = opts.volume;
+                const done = () => resolve();
+                u.onend = done; u.onerror = done; u.onpause = done; u.onboundary = null;
+                window.speechSynthesis.speak(u);
+                // 保险超时：最长6秒
+                setTimeout(done, opts.timeoutMs || 6000);
+            });
+        }
+
+        // 朗读当前剧本台词（Promise版）
+        function speakCurrentScriptAsync() {
+            const excerpt = (document.getElementById('scriptExcerpt')?.textContent || '').trim();
+            if (!excerpt) return Promise.resolve();
+            const text = excerpt.replace(/^“|”$/g, '');
+            return ttsSpeak(text, { lang: 'zh-CN', timeoutMs: 7000 });
         }
 
         // 倒计时显示
@@ -1623,6 +1796,7 @@
             
             select.selectedIndex = nextIndex;
             updateUI();
+            updateScriptGuide();
             
             // 隐藏结果区域
             document.getElementById('resultsSection').classList.remove('visible');
@@ -1650,6 +1824,72 @@
         function getCurrentTarget() {
             const commandId = getCurrentCommandId();
             return TRAINING_COMMANDS[commandId] ? TRAINING_COMMANDS[commandId].target : 'neutral';
+        }
+
+        // 剧本引导逻辑
+        function mapCommandTargetToScriptKey(target) {
+            // 目前训练target即对应脚本key
+            return target === 'smile' ? 'smile' : target;
+        }
+
+        function getScriptListForTarget(target) {
+            const key = mapCommandTargetToScriptKey(target || 'neutral');
+            return SCRIPT_GUIDES[key] || [];
+        }
+
+        function getScriptIndex(target) {
+            const key = mapCommandTargetToScriptKey(target);
+            if (!(key in scriptIndices)) scriptIndices[key] = 0;
+            return scriptIndices[key];
+        }
+
+        function setScriptIndex(target, idx) {
+            const key = mapCommandTargetToScriptKey(target);
+            scriptIndices[key] = idx;
+        }
+
+        function updateScriptGuide() {
+            const target = getCurrentTarget();
+            const list = getScriptListForTarget(target);
+            const metaEl = document.getElementById('scriptMeta');
+            const excerptEl = document.getElementById('scriptExcerpt');
+            const noteEl = document.getElementById('scriptNote');
+
+            if (!metaEl || !excerptEl || !noteEl) return;
+
+            if (!list.length) {
+                metaEl.textContent = '红楼梦 · 暂无匹配场景';
+                excerptEl.textContent = '该表情暂未配置剧本引导。';
+                noteEl.textContent = '提示：仍可根据表演建议进行训练。';
+                return;
+            }
+
+            const idx = Math.max(0, Math.min(getScriptIndex(target), list.length - 1));
+            const item = list[idx];
+            metaEl.textContent = `${item.work} · ${item.scene} · 角色：${item.role}`;
+            excerptEl.textContent = `“${item.excerpt}”`;
+            noteEl.textContent = item.coaching || '';
+        }
+
+        function cycleScript(step) {
+            const target = getCurrentTarget();
+            const list = getScriptListForTarget(target);
+            if (!list.length) return;
+            const cur = getScriptIndex(target);
+            const next = (cur + step + list.length) % list.length;
+            setScriptIndex(target, next);
+            updateScriptGuide();
+        }
+
+        function speakCurrentScript() {
+            if (!('speechSynthesis' in window)) return;
+            const excerpt = (document.getElementById('scriptExcerpt')?.textContent || '').trim();
+            if (!excerpt) return;
+            const text = excerpt.replace(/^“|”$/g, '');
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.lang = 'zh-CN';
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+            window.speechSynthesis.speak(utter);
         }
     </script>
 </body>
