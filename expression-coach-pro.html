@@ -201,6 +201,16 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .toggle-row input { accent-color: #4ecdc4; }
         
         .btn-primary {
             background: linear-gradient(45deg, #4ecdc4, #45b7d1);
@@ -504,6 +514,13 @@
                 <button class="btn-primary" id="startBtn">Start Training</button>
                 <button class="btn-secondary" id="nextBtn">Next Expression</button>
                 <button class="btn-secondary" id="calibrateBtn">Quick Calibrate</button>
+                <button class="btn-secondary" id="resetCalibrateBtn">Reset Calibration</button>
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">偏好设置</label>
+                <div class="toggle-row"><input type="checkbox" id="toggleAutoTTS" checked> 自动播报</div>
+                <div class="toggle-row"><input type="checkbox" id="toggleMirror" checked> 镜像显示</div>
             </div>
         </div>
         
@@ -697,7 +714,9 @@
         let metricsBuffer = [];
         let lastFrameTime = 0;
         let frameCount = 0;
+        let fps = 0;
         let scriptIndices = {}; // 剧本索引（按target存储）
+        let settings = { autoTTS: true, mirror: true };
 
         // 红楼梦·剧本引导素材（精简、公版）
         const SCRIPT_GUIDES = {
@@ -789,8 +808,12 @@
 
         // 初始化应用
         document.addEventListener('DOMContentLoaded', async () => {
+            loadSettings();
+            loadBaseline();
             await initializeCamera();
             setupEventListeners();
+            applyMirror(settings.mirror);
+            syncPreferenceUI();
             updateUI();
             updateScriptGuide();
         });
@@ -811,6 +834,8 @@
             document.getElementById('startBtn').addEventListener('click', startTraining);
             document.getElementById('nextBtn').addEventListener('click', nextExpression);
             document.getElementById('calibrateBtn').addEventListener('click', quickCalibrate);
+            const resetBtn = document.getElementById('resetCalibrateBtn');
+            if (resetBtn) resetBtn.addEventListener('click', resetCalibration);
 
             // 口令选择
             document.getElementById('commandSelect').addEventListener('change', () => {
@@ -825,6 +850,21 @@
             if (nextBtn) nextBtn.addEventListener('click', () => cycleScript(1));
             if (prevBtn) prevBtn.addEventListener('click', () => cycleScript(-1));
             if (ttsBtn) ttsBtn.addEventListener('click', speakCurrentScript);
+
+            // 偏好设置
+            const autoTTSChk = document.getElementById('toggleAutoTTS');
+            const mirrorChk = document.getElementById('toggleMirror');
+            if (autoTTSChk) autoTTSChk.addEventListener('change', () => { settings.autoTTS = !!autoTTSChk.checked; saveSettings(); });
+            if (mirrorChk) mirrorChk.addEventListener('change', () => { settings.mirror = !!mirrorChk.checked; applyMirror(settings.mirror); saveSettings(); });
+
+            // 快捷键
+            window.addEventListener('keydown', (e) => {
+                if (e.target && ['INPUT','SELECT','TEXTAREA'].includes(e.target.tagName)) return;
+                if (e.key === 's' || e.key === 'S') startTraining();
+                if (e.key === 'n' || e.key === 'N') nextExpression();
+                if (e.key === 'c' || e.key === 'C') quickCalibrate();
+                if (e.key === 't' || e.key === 'T') speakCurrentScript();
+            });
         }
 
         // 初始化摄像头和MediaPipe
@@ -885,6 +925,7 @@
             // 计算FPS
             frameCount++;
             if (now - lastFrameTime >= 1000) {
+                fps = frameCount;
                 lastFrameTime = now;
                 frameCount = 0;
             }
@@ -910,7 +951,7 @@
                     });
                 }
                 
-                document.getElementById('videoStatus').textContent = '面部检测正常';
+                document.getElementById('videoStatus').textContent = `面部检测正常 · FPS: ${fps}`;
             } else {
                 document.getElementById('videoStatus').textContent = '未检测到面部';
             }
@@ -1408,13 +1449,15 @@
             
             // 自动播报：先播报剧本台词，再播报训练口令
             try {
-                await speakCurrentScriptAsync();
-                if (command.tts) {
-                    await ttsSpeak(command.text);
+                if (settings.autoTTS) {
+                    await speakCurrentScriptAsync();
+                    if (command.tts) {
+                        await ttsSpeak(command.text);
+                    }
+                    // 0.5秒呼吸停顿
+                    await new Promise(r => setTimeout(r, 500));
                 }
-            } catch (e) {
-                // 忽略TTS错误，继续流程
-            }
+            } catch (e) { /* 忽略TTS错误 */ }
             
             // 倒计时
             await countdown(3);
@@ -1764,14 +1807,18 @@
                 speechSynthesis.speak(utterance);
             }
             
-            // 1秒校准时间
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // 1.2秒校准时间（舍弃前200ms）
+            const startTs = performance.now();
+            await new Promise(resolve => setTimeout(resolve, 1200));
             
             // 计算基线
             if (metricsBuffer.length > 0) {
                 const validMetrics = metricsBuffer.map(item => item.metrics).filter(m => m !== null);
                 if (validMetrics.length > 0) {
-                    baseline = calculateAverageMetrics(validMetrics);
+                    // 舍弃前200ms的样本
+                    const filtered = metricsBuffer.filter(it => it.timestamp >= startTs + 200).map(it => it.metrics);
+                    baseline = calculateAverageMetrics(filtered.length ? filtered : validMetrics);
+                    try { localStorage.setItem('fec_baseline', JSON.stringify(baseline)); } catch (e) {}
                     document.getElementById('currentCommand').textContent = '✅ 个人校准完成！现在可以开始训练';
                     
                     // 更新建议
@@ -1785,6 +1832,13 @@
             
             isCalibrating = false;
             document.getElementById('calibrateBtn').disabled = false;
+        }
+
+        function resetCalibration() {
+            baseline = null;
+            try { localStorage.removeItem('fec_baseline'); } catch (e) {}
+            updateTips(['已重置个人校准。建议先进行“Quick Calibrate”再开始训练，以获得更准确的评分与建议。']);
+            document.getElementById('currentCommand').textContent = '校准已清除。可重新进行 Quick Calibrate。';
         }
 
         // 下一个表情
@@ -1824,6 +1878,38 @@
         function getCurrentTarget() {
             const commandId = getCurrentCommandId();
             return TRAINING_COMMANDS[commandId] ? TRAINING_COMMANDS[commandId].target : 'neutral';
+        }
+
+        // 偏好设置与镜像
+        function loadSettings() {
+            try {
+                const s = JSON.parse(localStorage.getItem('fec_settings') || '{}');
+                settings = { autoTTS: true, mirror: true, ...s };
+            } catch (e) { settings = { autoTTS: true, mirror: true }; }
+        }
+        function saveSettings() {
+            try { localStorage.setItem('fec_settings', JSON.stringify(settings)); } catch (e) {}
+        }
+        function syncPreferenceUI() {
+            const autoTTSChk = document.getElementById('toggleAutoTTS');
+            const mirrorChk = document.getElementById('toggleMirror');
+            if (autoTTSChk) autoTTSChk.checked = !!settings.autoTTS;
+            if (mirrorChk) mirrorChk.checked = !!settings.mirror;
+        }
+        function applyMirror(flag) {
+            const v = document.getElementById('videoElement');
+            const c = document.getElementById('overlayCanvas');
+            if (v) v.style.transform = flag ? 'scaleX(-1)' : 'none';
+            if (c) c.style.transform = flag ? 'scaleX(-1)' : 'none';
+        }
+        function loadBaseline() {
+            try {
+                const b = JSON.parse(localStorage.getItem('fec_baseline') || 'null');
+                if (b && typeof b === 'object') {
+                    baseline = b;
+                    updateTips(['检测到已保存的个人校准，评分将基于你的面部基线进行。']);
+                }
+            } catch (e) {}
         }
 
         // 剧本引导逻辑
