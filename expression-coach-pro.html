@@ -497,30 +497,30 @@
             </div>
             
             <div class="control-group">
-                <label class="control-label" for="commandSelect">Training Prompt</label>
+                <label class="control-label" for="commandSelect">训练口令</label>
                 <select id="commandSelect">
-                    <option value="smile_natural">Natural Smile (2s)</option>
-                    <option value="smile_duchenne">Duchenne Smile (2s)</option>
-                    <option value="neutral">Neutral Face (2s)</option>
-                    <option value="focus">Focused (2s)</option>
-                    <option value="surprised">Surprised (1.5s)</option>
-                    <option value="sad">Sad (2s)</option>
-                    <option value="disgust">Disgust (2s)</option>
-                    <option value="angry">Angry (2s)</option>
+                    <option value="smile_natural">自然微笑（2秒）</option>
+                    <option value="smile_duchenne">带眼笑/Duchenne（2秒）</option>
+                    <option value="neutral">中性脸（2秒）</option>
+                    <option value="focus">专注（2秒）</option>
+                    <option value="surprised">惊讶（1.5秒）</option>
+                    <option value="sad">悲伤（2秒）</option>
+                    <option value="disgust">厌恶（2秒）</option>
+                    <option value="angry">愤怒（2秒）</option>
                 </select>
             </div>
             
             <div class="control-group">
-                <button class="btn-primary" id="startBtn">Start Training</button>
-                <button class="btn-secondary" id="nextBtn">Next Expression</button>
-                <button class="btn-secondary" id="calibrateBtn">Quick Calibrate</button>
-                <button class="btn-secondary" id="resetCalibrateBtn">Reset Calibration</button>
+                <button class="btn-primary" id="startBtn">开始训练</button>
+                <button class="btn-secondary" id="nextBtn">下一个表情</button>
+                <button class="btn-secondary" id="calibrateBtn">快速校准</button>
+                <button class="btn-secondary" id="resetCalibrateBtn">重置校准</button>
             </div>
 
             <div class="control-group">
-                <label class="control-label">Preferences</label>
-                <div class="toggle-row"><input type="checkbox" id="toggleAutoTTS" checked> Auto TTS</div>
-                <div class="toggle-row"><input type="checkbox" id="toggleMirror" checked> Mirror Video</div>
+                <label class="control-label">偏好设置</label>
+                <div class="toggle-row"><input type="checkbox" id="toggleAutoTTS" checked> 自动播报</div>
+                <div class="toggle-row"><input type="checkbox" id="toggleMirror" checked> 镜像显示</div>
             </div>
         </div>
         
@@ -529,11 +529,11 @@
             <div class="video-container">
                 <video id="videoElement" autoplay muted playsinline></video>
                 <canvas id="overlayCanvas"></canvas>
-                <div class="video-status" id="videoStatus">Waiting for camera...</div>
+                <div class="video-status" id="videoStatus">等待摄像头...</div>
             </div>
             
             <div class="training-info">
-                <div class="current-command" id="currentCommand">Pick a prompt and press Start</div>
+                <div class="current-command" id="currentCommand">选择训练口令并点击开始</div>
                 <div class="countdown" id="countdown"></div>
             </div>
         </div>
@@ -542,24 +542,24 @@
         <div class="tips-panel">
             <div class="tips-title">
                 <span>💡</span>
-                <span>Acting Tips</span>
+                <span>表演建议</span>
             </div>
             <div id="tipsContainer">
-                <div class="tip-item">Choose a mode and target expression to begin.</div>
+                <div class="tip-item">准备开始训练，选择表演模式和目标表情</div>
             </div>
 
             <div class="tips-title" style="margin-top:16px;">
                 <span>📜</span>
-                <span>Script Coach</span>
+                <span>剧本引导</span>
             </div>
             <div id="scriptGuideContainer" class="script-item">
-                <div id="scriptMeta" class="script-meta">Dream of the Red Chamber · Scene · Role</div>
-                <div id="scriptExcerpt" class="script-excerpt">After choosing an expression, a matching line or imagery will appear.</div>
-                <div id="scriptNote" class="script-note">Tip: Enter the role first; let the face follow naturally.</div>
+                <div id="scriptMeta" class="script-meta">红楼梦 · 场景预设 · 角色</div>
+                <div id="scriptExcerpt" class="script-excerpt">选择目标表情后，将为你呈现一段对应的红楼梦场景台词或意境提示。</div>
+                <div id="scriptNote" class="script-note">提示：先用心进入角色，再让表情自然到位。</div>
                 <div class="script-actions">
-                    <button id="prevScriptBtn" class="btn-secondary">Previous</button>
-                    <button id="nextScriptBtn" class="btn-secondary">Another</button>
-                    <button id="ttsScriptBtn" class="btn-secondary">Speak Line</button>
+                    <button id="prevScriptBtn" class="btn-secondary">上一条</button>
+                    <button id="nextScriptBtn" class="btn-secondary">换一条</button>
+                    <button id="ttsScriptBtn" class="btn-secondary">朗读台词</button>
                 </div>
             </div>
         </div>
@@ -567,17 +567,17 @@
         <!-- Results Section -->
         <div class="results" id="resultsSection">
             <div class="results-header">
-                <div class="results-title" id="resultsTitle">Training Results</div>
+                <div class="results-title" id="resultsTitle">训练结果</div>
                 <div class="amplitude-label" id="amplitudeLabel">Medium</div>
             </div>
             
             <div class="charts-container">
                 <div class="chart-section">
-                    <div class="chart-title">Acting Dimensions</div>
+                    <div class="chart-title">四维评分</div>
                     <canvas id="radarChart" class="chart" width="300" height="200"></canvas>
                 </div>
                 <div class="chart-section">
-                    <div class="chart-title">Technical Metrics</div>
+                    <div class="chart-title">技术指标</div>
                     <canvas id="barChart" class="chart" width="300" height="200"></canvas>
                 </div>
             </div>
@@ -585,11 +585,11 @@
     </div>
 
     <script>
-        // Training prompts config
+        // 训练口令配置
         const TRAINING_COMMANDS = {
             smile_natural: {
                 id: "smile_natural",
-                text: "Make a natural smile and hold for 2 seconds",
+                text: "请做自然微笑并保持两秒",
                 tts: true,
                 duration: 2000,
                 target: "smile",
@@ -598,7 +598,7 @@
             },
             smile_duchenne: {
                 id: "smile_duchenne", 
-                text: "Duchenne smile: engage the eyes and hold for 2 seconds",
+                text: "请做带眼笑（眼角轻微眯起）并保持两秒",
                 tts: true,
                 duration: 2000,
                 target: "smile",
@@ -607,7 +607,7 @@
             },
             neutral: {
                 id: "neutral",
-                text: "Hold a neutral face for 2 seconds",
+                text: "请保持中性脸部表情两秒",
                 tts: true,
                 duration: 2000,
                 target: "neutral",
@@ -616,7 +616,7 @@
             },
             focus: {
                 id: "focus",
-                text: "Make a focused expression and hold for 2 seconds",
+                text: "请做专注表情并保持两秒",
                 tts: true,
                 duration: 2000,
                 target: "focus",
@@ -625,7 +625,7 @@
             },
             surprised: {
                 id: "surprised",
-                text: "Make a surprised expression and hold for 1.5 seconds",
+                text: "请做惊讶表情并保持一秒半",
                 tts: true,
                 duration: 1500,
                 target: "surprised",
@@ -634,7 +634,7 @@
             },
             sad: {
                 id: "sad",
-                text: "Make a sad expression and hold for 2 seconds",
+                text: "请做悲伤表情并保持两秒",
                 tts: true,
                 duration: 2000,
                 target: "sad",
@@ -643,7 +643,7 @@
             },
             disgust: {
                 id: "disgust",
-                text: "Make a disgust expression and hold for 2 seconds",
+                text: "请做厌恶表情并保持两秒",
                 tts: true,
                 duration: 2000,
                 target: "disgust",
@@ -652,7 +652,7 @@
             },
             angry: {
                 id: "angry",
-                text: "Make an angry expression and hold for 2 seconds",
+                text: "请做愤怒表情并保持两秒",
                 tts: true,
                 duration: 2000,
                 target: "angry",
@@ -722,86 +722,86 @@
         const SCRIPT_GUIDES = {
             smile: [
                 {
-                    work: 'Dream of the Red Chamber', role: 'Jia Baoyu', scene: 'Garden chat',
-                    excerpt: 'Seeing Daiyu smiling gently, he cannot help a soft smile.',
-                    coaching: 'Natural: lift mouth corners lightly, let the eyes soften; easy breath.'
+                    work: '红楼梦', role: '贾宝玉', scene: '怡红院小叙',
+                    excerpt: '见黛玉言笑晏晏，心下喜欢，唇畔不禁含笑。',
+                    coaching: '自然笑：嘴角轻提，眼角随之微弯，呼吸柔和。'
                 },
                 {
-                    work: 'Dream of the Red Chamber', role: 'Lin Daiyu', scene: 'With Baochai',
-                    excerpt: 'Baochai’s warm words ease her heart; a knowing smile appears.',
-                    coaching: 'Duchenne: let the smile rise from the eyes, then the mouth.'
+                    work: '红楼梦', role: '林黛玉', scene: '与宝钗相对',
+                    excerpt: '见宝钗言语温润，心下释然，眉目间露出会心一笑。',
+                    coaching: 'Duchenne：让笑意从眼底生起，再到嘴角。'
                 }
             ],
             neutral: [
                 {
-                    work: 'Dream of the Red Chamber', role: 'Xue Baochai', scene: 'Listening calmly',
-                    excerpt: 'Composed and poised, neither pleased nor angry, serene as jade.',
-                    coaching: 'Neutral: relax jaw and brow, steady gaze, even breath.'
+                    work: '红楼梦', role: '薛宝钗', scene: '坐听闲话',
+                    excerpt: '神色安然，端庄自持，不喜不怒，清润如玉。',
+                    coaching: '中性：放松下颌与眉心，目光稳定，呼吸匀。'
                 },
                 {
-                    work: 'Dream of the Red Chamber', role: 'Grandmother Jia', scene: 'Seated at the hall',
-                    excerpt: 'Sits with ease; kindness contained; features at rest as usual.',
-                    coaching: 'On camera, keep stillness; minimize micro-expressions.'
+                    work: '红楼梦', role: '贾母', scene: '厅前安坐',
+                    excerpt: '从容端坐，和气含光，容色不动如常。',
+                    coaching: '镜头前保持静定之气，细微表情尽量平。'
                 }
             ],
             focus: [
                 {
-                    work: 'Dream of the Red Chamber', role: 'Lin Daiyu', scene: 'Burying flowers, composing',
-                    excerpt: 'She bends to pick petals, eyes intent, weighing each word.',
-                    coaching: 'Focus: lower eyelids slightly, relax forehead, fix the gaze on one point.'
+                    work: '红楼梦', role: '林黛玉', scene: '葬花作诗',
+                    excerpt: '黛玉俯身拾花，凝神细看，字字推敲。',
+                    coaching: '专注：微收下眼睑，额面放松，目光聚焦一点。'
                 },
                 {
-                    work: 'Dream of the Red Chamber', role: 'Xue Baochai', scene: 'Copying sutras',
-                    excerpt: 'Breath steady; hands firm and eyes set; no distraction.',
-                    coaching: 'Reduce fidgets; lips lightly closed; fine nasal breath; hands-mind united.'
+                    work: '红楼梦', role: '薛宝钗', scene: '抄经刺绣',
+                    excerpt: '气息沉着，手稳眼定，不分心。',
+                    coaching: '收小动作，轻闭唇，鼻息细匀，心手合一。'
                 }
             ],
             surprised: [
                 {
-                    work: 'Dream of the Red Chamber', role: 'Jia Baoyu', scene: 'First meeting Daiyu',
-                    excerpt: 'At her arrival, his heart stirs; eyes open slightly; a brief start.',
-                    coaching: 'Surprise: lift brows a touch, release jaw, let a natural inhale happen.'
+                    work: '红楼梦', role: '贾宝玉', scene: '初见黛玉',
+                    excerpt: '见黛玉行来，顿觉心动，目光微张，神情一怔。',
+                    coaching: '惊讶：眉轻上提，下颌微松，吸气自然入。'
                 },
                 {
-                    work: 'Dream of the Red Chamber', role: 'Wang Xifeng', scene: 'Hearing sudden news',
-                    excerpt: 'On hearing strange news, she turns quickly, expression jolted.',
-                    coaching: 'Pop the brows/eyes then settle quickly; avoid overdoing it.'
+                    work: '红楼梦', role: '王熙凤', scene: '闻变',
+                    excerpt: '闻说内宅有异，忙回首张望，神色一震。',
+                    coaching: '瞬时提眉开目，再迅速收稳，避免过度。'
                 }
             ],
             sad: [
                 {
-                    work: 'Dream of the Red Chamber', role: 'Lin Daiyu', scene: 'Ode to Fallen Flowers',
-                    excerpt: 'Petals fall and scatter; fragrance fades—who will pity?',
-                    coaching: 'Sadness: slight brow knit, corners contained, gaze down, shallow breath.'
+                    work: '红楼梦', role: '林黛玉', scene: '葬花词',
+                    excerpt: '花谢花飞飞满天，红消香断有谁怜。',
+                    coaching: '悲伤：眉心轻蹙，嘴角略收，视线下垂，气息浅。'
                 },
                 {
-                    work: 'Dream of the Red Chamber', role: 'Shi Xiangyun', scene: 'Weeping by the stone',
-                    excerpt: 'Leaning alone by the rock, tears not yet dry, a smile hard to keep.',
-                    coaching: 'Restrained sorrow: feeling inside, shape in small; avoid sobbing excess.'
+                    work: '红楼梦', role: '史湘云', scene: '枕石泣涟',
+                    excerpt: '独倚石畔，泪痕未干，强自含笑终难。',
+                    coaching: '克制的悲：情在内，形在微，避免夸张抽泣。'
                 }
             ],
             disgust: [
                 {
-                    work: 'Dream of the Red Chamber', role: 'Lin Daiyu', scene: 'Aversion to vulgarity',
-                    excerpt: 'Hearing coarse talk, she turns away; nose narrows; lips press lightly.',
-                    coaching: 'Disgust: lift upper lip a little; wrinkle nose subtly; moderate amplitude.'
+                    work: '红楼梦', role: '林黛玉', scene: '嫌俗',
+                    excerpt: '闻俗言笑，转面不语，鼻翼微收，唇角微抿。',
+                    coaching: '厌恶：上唇轻提，鼻翼微皱，幅度适中更可信。'
                 },
                 {
-                    work: 'Dream of the Red Chamber', role: 'Jia Baoyu', scene: 'Tiring of success-talk',
-                    excerpt: 'At talk of fame and office, he grows impatient and changes the topic.',
-                    coaching: 'More emotional disdain: avert gaze; draw corners in slightly.'
+                    work: '红楼梦', role: '贾宝玉', scene: '厌仕途经济',
+                    excerpt: '每闻功名之谈，辄不耐烦，转开话头。',
+                    coaching: '更偏情绪的嫌弃：目光侧避，口角内收一点。'
                 }
             ],
             angry: [
                 {
-                    work: 'Dream of the Red Chamber', role: 'Wang Xifeng', scene: 'Household scolding',
-                    excerpt: 'Brows pressed; eyes cold; her rebuke quiets the hall.',
-                    coaching: 'Anger: lower brows, fix gaze; powered exhale, face stays organized.'
+                    work: '红楼梦', role: '王熙凤', scene: '治家震怒',
+                    excerpt: '凤姐沉眉冷目，叱责有声，众皆噤若寒蝉。',
+                    coaching: '愤怒：眉压低，目光定，呼气用力但面部不乱。'
                 },
                 {
-                    work: 'Dream of the Red Chamber', role: 'Tanchun', scene: 'Resolute management',
-                    excerpt: 'Firm words within measure; expression determined.',
-                    coaching: 'Restrained anger: set jaw; lower brows with steady eyes; keep force internal.'
+                    work: '红楼梦', role: '探春', scene: '理家不屈',
+                    excerpt: '言辞峻厉而不失分寸，神色坚决。',
+                    coaching: '克制的怒：紧收下颌，眉压而眼稳，力度在内。'
                 }
             ]
         };
@@ -885,11 +885,11 @@
                 };
 
                 await initializeFaceMesh();
-                document.getElementById('videoStatus').textContent = 'Camera ready';
+                document.getElementById('videoStatus').textContent = '摄像头就绪';
                 
             } catch (error) {
-                console.error('Camera init failed:', error);
-                document.getElementById('videoStatus').textContent = 'Camera access failed';
+                console.error('摄像头初始化失败:', error);
+                document.getElementById('videoStatus').textContent = '摄像头访问失败';
             }
         }
 
@@ -951,9 +951,9 @@
                     });
                 }
                 
-                document.getElementById('videoStatus').textContent = `Face detected · FPS: ${fps}`;
+                document.getElementById('videoStatus').textContent = `面部检测正常 · FPS: ${fps}`;
             } else {
-                document.getElementById('videoStatus').textContent = 'No face detected';
+                document.getElementById('videoStatus').textContent = '未检测到面部';
             }
         }
 
@@ -1342,17 +1342,17 @@
             // Clarity 清晰度反馈
             if (dimScores.clarity < 60) {
                 if (isStage) {
-                    tips.push("Clarity is low for stage distance. Enlarge mouth spread or brow movement about 15%.");
+                    tips.push("幅度不足，观众席第十排看不清。加大嘴角外展或眉部动作15%。");
                 } else {
-                    tips.push("Expression isn’t clear enough. Make the action a touch more defined while staying natural.");
+                    tips.push("表情不够清晰，试着让面部动作更加明确，但保持自然。");
                 }
             }
             
             // Intensity 强度反馈
             if (dimScores.intensity > 85 && isFilm) {
-                tips.push("Amplitude is exaggerated for camera. Reduce about 20% to preserve authenticity.");
+                tips.push("幅度偏夸张，靠近镜头会显得用力。收20%保持真实感。");
             } else if (dimScores.intensity < 50 && isStage) {
-                tips.push("For stage, increase amplitude so faces read from the back rows.");
+                tips.push("舞台表演需要更大幅度，观众需要从远处看清你的表情。");
             }
             
             // Truth 真实性反馈
@@ -1372,16 +1372,16 @@
             
             // Consistency 一致性反馈
             if (dimScores.consistency < 60) {
-                tips.push("Upper and lower face aren’t unified. Set the eyes first, then bring in the mouth gradually.");
+                tips.push("上半脸与下半脸不统一。先定住眼神，再缓慢带动嘴角，避免冲突。");
             }
             
             // 光照和姿态反馈
             if (metrics.illumScore < 0.6) {
-                tips.push("Adjust light to a 30–45° frontal angle to improve readability.");
+                tips.push("光源不在正前上方，表情阴影影响可读性，调整到30-45°角度。");
             }
             
             if (metrics.poseYawProxy < 0.7) {
-                tips.push("Face the camera frontally; avoid profile which reduces recognition.");
+                tips.push("保持正面朝向摄像头，避免侧脸影响表情识别。");
             }
             
             // 特定表情的专项建议
@@ -1391,9 +1391,9 @@
             if (tips.length === 0) {
                 const avgScore = (dimScores.clarity + dimScores.consistency + dimScores.intensity + dimScores.truth) / 4;
                 if (avgScore > 80) {
-                    tips.push("Great work — natural and truthful, fitting " + (isFilm ? "film" : "stage") + " demands.");
+                    tips.push("出色的表现！表情自然真实，符合" + (isFilm ? "影视镜头" : "舞台表演") + "的要求。");
                 } else {
-                    tips.push("Solid overall. Keep this state; practice will make it feel even more natural.");
+                    tips.push("整体不错，继续保持这种状态，多练习会更加自然。");
                 }
             }
             
@@ -1406,26 +1406,26 @@
                 case 'smile':
                     if (TRAINING_COMMANDS[getCurrentCommandId()].duchenne) {
                         if (dimScores.truth < 70) {
-                            tips.push("Duchenne needs eye involvement. Recall a truly happy moment so the eye corners engage.");
+                            tips.push("Duchenne笑需要眼部参与，想象真正开心的事情，让眼角自然弯曲。");
                         }
                     }
                     break;
                     
                 case 'surprised':
                     if (metrics.mouthOpen < (baseline ? baseline.mouthOpen + 0.05 : 0.1)) {
-                        tips.push("For surprise, release the jaw and separate the lips — as if truly startled.");
+                        tips.push("惊讶表情需要放下颌，拉开上下唇距离，就像真的被什么震惊了。");
                     }
                     break;
                     
                 case 'sad':
                     if (dimScores.intensity < 50) {
-                        tips.push("Sadness isn’t only drooping corners. A slight brow knit and distant gaze help.");
+                        tips.push("悲伤不只是嘴角下垂，眉心轻皱、眼神失焦会更有说服力。");
                     }
                     break;
                     
                 case 'angry':
                     if (dimScores.clarity < 60) {
-                        tips.push("Core of anger is the eyes. Lower the brows while keeping the gaze concentrated.");
+                        tips.push("愤怒表情的核心在眼神，压低眉毛的同时保持目光集中。");
                     }
                     break;
             }
@@ -1484,7 +1484,7 @@
                 if (!('speechSynthesis' in window) || !text) return resolve();
                 try { window.speechSynthesis.cancel(); } catch (e) {}
                 const u = new SpeechSynthesisUtterance(text);
-                u.lang = opts.lang || 'en-US';
+                u.lang = opts.lang || 'zh-CN';
                 if (opts.rate) u.rate = opts.rate;
                 if (opts.pitch) u.pitch = opts.pitch;
                 if (opts.volume) u.volume = opts.volume;
@@ -1501,7 +1501,7 @@
             const excerpt = (document.getElementById('scriptExcerpt')?.textContent || '').trim();
             if (!excerpt) return Promise.resolve();
             const text = excerpt.replace(/^“|”$/g, '');
-            return ttsSpeak(text, { lang: 'en-US', timeoutMs: 7000 });
+            return ttsSpeak(text, { lang: 'zh-CN', timeoutMs: 7000 });
         }
 
         // 倒计时显示
@@ -1514,7 +1514,7 @@
                 await new Promise(resolve => setTimeout(resolve, 1000));
             }
             
-            countdownEl.textContent = 'Go!';
+            countdownEl.textContent = '开始！';
             countdownEl.style.color = '#4ecdc4';
             await new Promise(resolve => setTimeout(resolve, 500));
             countdownEl.textContent = '';
@@ -1651,7 +1651,7 @@
             
             // 更新标题
             const commandText = TRAINING_COMMANDS[getCurrentCommandId()].text;
-            document.getElementById('resultsTitle').textContent = `${currentMode === 'film' ? 'Film' : 'Stage'} mode - ${commandText}`;
+            document.getElementById('resultsTitle').textContent = `${currentMode === 'film' ? '影视镜头' : '舞台表演'}模式 - ${commandText}`;
             
             // 更新幅度标签
             const amplitude = calculateAmplitude(metrics);
@@ -1790,7 +1790,7 @@
             }
         }
 
-        // Quick Calibrate
+        // Quick Calibrate - 快速校准
         async function quickCalibrate() {
             if (isCalibrating) return;
             
@@ -1798,12 +1798,12 @@
             metricsBuffer = [];
             
             document.getElementById('calibrateBtn').disabled = true;
-            document.getElementById('currentCommand').textContent = 'Hold a neutral face for calibration...';
+            document.getElementById('currentCommand').textContent = '保持中性表情进行校准...';
             
             // TTS提示
             if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance('Please hold a neutral face for one second to calibrate');
-                utterance.lang = 'en-US';
+                const utterance = new SpeechSynthesisUtterance('请保持中性表情一秒钟进行个人校准');
+                utterance.lang = 'zh-CN';
                 speechSynthesis.speak(utterance);
             }
             
@@ -1819,15 +1819,15 @@
                     const filtered = metricsBuffer.filter(it => it.timestamp >= startTs + 200).map(it => it.metrics);
                     baseline = calculateAverageMetrics(filtered.length ? filtered : validMetrics);
                     try { localStorage.setItem('fec_baseline', JSON.stringify(baseline)); } catch (e) {}
-                    document.getElementById('currentCommand').textContent = '✅ Calibration complete! You can start training now';
+                    document.getElementById('currentCommand').textContent = '✅ 个人校准完成！现在可以开始训练';
                     
                     // 更新建议
-                    updateTips(['Calibration saved. Scoring will be based on your personal baseline for better accuracy.']);
+                    updateTips(['个人校准已完成，表情评分将基于你的面部基线进行，结果会更准确。']);
                 } else {
-                    document.getElementById('currentCommand').textContent = '❌ Calibration failed. No face detected';
+                    document.getElementById('currentCommand').textContent = '❌ 校准失败，未检测到面部';
                 }
             } else {
-                document.getElementById('currentCommand').textContent = '❌ Calibration failed. Please ensure your face is clearly visible';
+                document.getElementById('currentCommand').textContent = '❌ 校准失败，请确保面部清晰可见';
             }
             
             isCalibrating = false;
@@ -1837,8 +1837,8 @@
         function resetCalibration() {
             baseline = null;
             try { localStorage.removeItem('fec_baseline'); } catch (e) {}
-            updateTips(['Calibration has been reset. Run Quick Calibrate before training for more accurate feedback.']);
-            document.getElementById('currentCommand').textContent = 'Calibration cleared. You can run Quick Calibrate again.';
+            updateTips(['已重置个人校准。建议先进行“快速校准”再开始训练，以获得更准确的评分与建议。']);
+            document.getElementById('currentCommand').textContent = '校准已清除。可重新进行 快速校准。';
         }
 
         // 下一个表情
@@ -1862,12 +1862,12 @@
             const command = TRAINING_COMMANDS[commandId];
             
             if (command) {
-                document.getElementById('currentCommand').textContent = `Ready: ${command.text}`;
+                document.getElementById('currentCommand').textContent = `准备：${command.text}`;
             }
             
-            // Update mode title
-            const modeText = currentMode === 'film' ? 'Film mode' : 'Stage mode';
-            document.title = `Expression Coach Pro - ${modeText}`;
+            // 更新模式显示
+            const modeText = currentMode === 'film' ? '影视镜头模式' : '舞台表演模式';
+            document.title = `表情训练教练 - ${modeText}`;
         }
 
         // 辅助函数
@@ -1907,7 +1907,7 @@
                 const b = JSON.parse(localStorage.getItem('fec_baseline') || 'null');
                 if (b && typeof b === 'object') {
                     baseline = b;
-                    updateTips(['Loaded saved calibration. Your scores will use your personal baseline.']);
+                    updateTips(['检测到已保存的个人校准，评分将基于你的面部基线进行。']);
                 }
             } catch (e) {}
         }
@@ -1944,15 +1944,15 @@
             if (!metaEl || !excerptEl || !noteEl) return;
 
             if (!list.length) {
-                metaEl.textContent = 'Dream of the Red Chamber · No matching scene';
-                excerptEl.textContent = 'No script guidance configured for this expression yet.';
-                noteEl.textContent = 'Tip: You can still train using the Acting Tips above.';
+                metaEl.textContent = '红楼梦 · 暂无匹配场景';
+                excerptEl.textContent = '该表情暂未配置剧本引导。';
+                noteEl.textContent = '提示：仍可根据表演建议进行训练。';
                 return;
             }
 
             const idx = Math.max(0, Math.min(getScriptIndex(target), list.length - 1));
             const item = list[idx];
-            metaEl.textContent = `${item.work} · ${item.scene} · Role: ${item.role}`;
+            metaEl.textContent = `${item.work} · ${item.scene} · 角色：${item.role}`;
             excerptEl.textContent = `“${item.excerpt}”`;
             noteEl.textContent = item.coaching || '';
         }
